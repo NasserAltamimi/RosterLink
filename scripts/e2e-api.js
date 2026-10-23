@@ -8,6 +8,8 @@ import { User } from '../server/modules/auth/model.js';
 import { PlayerProfile, PlayerGame } from '../server/modules/profiles/model.js';
 import { Game } from '../server/modules/games/model.js';
 import { seedGames } from '../server/modules/games/catalog.js';
+import { createTournamentSearch } from '../server/modules/games/tournaments.js';
+import { fixtureFetch } from '../tests/fixtures/competition-provider.js';
 
 await mkdir('.local-data', { recursive: true });
 const directory = await mkdtemp(resolve('.local-data/browser-'));
@@ -16,7 +18,11 @@ const mongoUri = mongo.getUri('rosterlink_browser');
 await connectDatabase(mongoUri);
 await Promise.all([User.init(), PlayerProfile.init(), PlayerGame.init(), Game.init()]);
 await seedGames();
-const app = createApp({ mongoUri, sessionSecret: 'browser-tests-only-secret-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5174' });
+await Game.create({ slug: 'local-valorant', providerId: 26, name: 'Valorant', enabled: true, schemaVersion: 2, fields: [] });
+await Game.create({ slug: 'local-mobile-legends', providerId: 34, name: 'Mobile Legends: Bang Bang', enabled: true, schemaVersion: 2, fields: [] });
+// Deterministic provider fixtures; browser tests never spend provider quota or use a real token.
+const tournamentSearch = createTournamentSearch({ token: 'browser-tests-only', fetchImpl: fixtureFetch });
+const app = createApp({ mongoUri, sessionSecret: 'browser-tests-only-secret-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5174', tournamentSearch });
 const server = app.listen(3002, '127.0.0.1', () => console.log('Browser test API ready. Uses an isolated real MongoDB database.'));
 const stop = () => server.close(async () => {
   await app.locals.sessionStore.close(); await mongoose.disconnect(); await mongo.stop();

@@ -2,7 +2,7 @@
 
 A responsive esports player platform for SWE 444 at King Saud University. The wider workflow is **player profile → team opening → application → review → tryout → decision**.
 
-Sprint 1 implements accounts, secure sessions, manual player profiles, a MongoDB-backed Rocket League catalog, separate game sections, and persistent profile/header images. Organization management, recruitment, password recovery, notifications, verification, social features, and provider integration remain later work.
+This branch implements accounts, secure sessions, manual player profiles, a MongoDB-backed game catalog, separate game sections, persistent profile/header images, and PandaScore competition metadata lookup. All selectable games share one form, with self-reported rank and competition results. Organization management, recruitment, password recovery, notifications, verification, social features, and player-account integration remain later work.
 
 ## Run locally
 
@@ -27,6 +27,7 @@ In terminal 2, after MongoDB is ready:
 
 ```powershell
 npm run seed
+npm run sync:games
 npm run dev
 ```
 
@@ -59,12 +60,14 @@ Open http://127.0.0.1:3001. Production requires HTTPS, `NODE_ENV=production`, th
 1. Open a clean browser context and register with a valid email and a 12–128 character password. Registration signs you in.
 2. Enter a gaming name, bio, region/country, and comma-separated languages; create the profile.
 3. Open **Edit profile** and upload both a profile image and a header: JPEG/PNG/WebP, at most 5 MB and 20 megapixels each.
-4. Open **Game profiles**. Select Rocket League and enter a competitive playlist, rank, applicable division, season, preference, server, communication language, and timezone-aware availability. Save.
+4. Open **Game profiles**. Select any game, choose a platform and Play region (Other allows custom text), and enter communication languages and playing/tryout availability with a timezone. Rank is optional. Optionally search `EWC`, select a competition edition, then choose a result or enter one manually. Participation and results remain self-reported. Save and reload.
 5. View the overview, reload, edit a value, log out, and log in again. Confirm saved details and both images return.
 6. Create a second account in a separate browser context. The first account's profile/game/image IDs cannot be read or modified using this session. Automated tests reproduce the attack requests.
 7. Try an invalid login, duplicate email, invalid image, and failed connection. Check useful errors and preserved form edits.
 
-Only **Rocket League competitive Soccar** is configured: one primary playlist/rank context per game section. The schema and generic form support additional configured games; no other production game is claimed. Extra modes and multiple ranks within one game are not implemented. Preferences are descriptive application choices, not official fixed positions. Ranks are **self-reported**.
+`npm run sync:games` imports PandaScore's game catalog using the server-only `PANDASCORE_API_TOKEN` in `.env`. All selectable games, including Rocket League, use one shared form: platform, server/play region, communication languages, and playing/tryout availability are required; rank and competitive experience are optional. Tournament experience supports backend PandaScore search and manual entry. Participation and placement are **self-reported**. Existing player-game IDs and original details are retained. See [shared-form behavior, migration, actual coverage, bounds, and demonstration](docs/shared-game-form.md).
+
+See [competition-selection fixes and verified EWC/MSC coverage](docs/competition-selection-fixes.md) for the region dropdown, grouped competition editions, separate result choices, compatibility rules, and live provider/backend/UI checks.
 
 The interface is **English/LTR**. Arabic input/Unicode persistence are supported; logical CSS properties and per-field `dir="auto"` prepare for localization. A translated Arabic/RTL interface is not implemented or claimed complete.
 

@@ -1,4 +1,5 @@
 import { Game } from './model.js';
+import { gameFields } from '../../../shared/game-form.js';
 
 const ranks = ['Unranked', ...['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Champion', 'Grand Champion']
   .flatMap(tier => ['I', 'II', 'III'].map(level => `${tier} ${level}`)), 'Supersonic Legend'];
@@ -8,6 +9,7 @@ const select = (key, label, options, extra = {}) => ({ key, label, type: 'select
 export const rocketLeague = {
   slug: 'rocket-league',
   name: 'Rocket League',
+  providerId: 22,
   enabled: true,
   schemaVersion: 1,
   description: 'Competitive Soccar pilot. Record one primary playlist and its self-reported rank per game section.',
@@ -33,7 +35,7 @@ export const rocketLeague = {
 
 export async function seedGames() {
   // An explicit seed command updates configuration. Never overwrite it on each request.
-  await Game.updateOne({ slug: rocketLeague.slug }, { $set: rocketLeague }, { upsert: true, runValidators: true });
+  await Game.updateOne({ slug: rocketLeague.slug }, { $set: { ...rocketLeague, fields: gameFields, schemaVersion: 2, description: 'Add your platform, play region, communication languages, and availability.' } }, { upsert: true, runValidators: true });
 }
 
 export function validateGameDetails(game, input) {

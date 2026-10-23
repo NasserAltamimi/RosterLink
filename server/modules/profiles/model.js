@@ -18,6 +18,16 @@ const playerGameSchema = new mongoose.Schema({
   schemaVersion: { type: Number, required: true },
   source: { type: String, enum: ['self_reported'], default: 'self_reported', immutable: true },
   details: { type: Map, of: String, required: true },
+  legacyDetails: { type: Map, of: String, default: undefined },
+  experience: { type: [new mongoose.Schema({
+    name: { type: String, required: true, maxlength: 200 },
+    edition: { type: String, required: true, maxlength: 80 },
+    placement: { type: String, required: true, maxlength: 120 },
+    stage: { type: String, maxlength: 120, default: '' },
+    tournament: { type: new mongoose.Schema({ provider: { type: String, enum: ['pandascore'], required: true }, id: { type: Number, required: true }, gameId: { type: Number, required: true } }, { _id: false }), default: null },
+    competition: { type: new mongoose.Schema({ provider: { type: String, enum: ['pandascore'], required: true }, gameId: { type: Number, required: true }, leagueId: { type: Number, required: true }, seriesId: { type: Number, required: true }, stageIds: [Number] }, { _id: false }), default: null },
+    result: { type: new mongoose.Schema({ kind: { type: String, enum: ['exact', 'range', 'top', 'elimination', 'manual'], required: true }, value: { type: String, required: true, maxlength: 120 } }, { _id: false }), default: null },
+  }, { _id: false, strict: 'throw' })], default: [] },
 }, { timestamps: true, strict: 'throw' });
 playerGameSchema.index({ profile: 1, game: 1 }, { unique: true });
 export const PlayerGame = mongoose.model('PlayerGame', playerGameSchema);

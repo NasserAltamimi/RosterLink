@@ -135,6 +135,34 @@ p { line-height: 1.65; }
 .game-details dd { font-size: .82rem; font-weight: 500; margin: 0; overflow-wrap: anywhere; }
 .game-picker { padding: 26px 30px; margin-block-end: 24px; }
 .game-picker p { font-size: .86rem; }
+.supported-games { border: 0; padding: 0; margin: 20px 0 0; min-width: 0; }
+.supported-games legend { font-size: .85rem; font-weight: 600; margin-block-end: 12px; }
+.game-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+.game-option { display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: .8rem; min-height: 52px; overflow-wrap: anywhere; }
+.game-option.selected { background: #e9efdf; border-color: #617457; }
+.game-option:focus-within { outline: 2px solid #617457; outline-offset: 2px; }
+.game-option input { width: 16px; height: 16px; margin: 0; flex-shrink: 0; accent-color: #153e34; }
+.game-option .badge { margin-inline-start: auto; font-size: .6rem; }
+.game-icon { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
+.experience-editor { border: 0; border-block-start: 1px solid var(--border); padding: 20px 0 0; margin: 24px 0 0; min-width: 0; }
+.experience-editor legend { font-weight: 600; padding-inline-end: 10px; }
+.experience-editor > .field { margin-block: 18px; }
+.experience-entry { border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin: 20px 0; min-width: 0; }
+.experience-entry legend { font-size: .85rem; }
+.tournament-results { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-block-end: 16px; }
+.tournament-result { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 10px; border-block-end: 1px solid var(--border); overflow-wrap: anywhere; }
+.tournament-result > div { min-width: 0; }
+.tournament-result strong { font-size: .85rem; }
+.tournament-result p { margin: 6px 0 0; }
+.search-pagination { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-block-start: 12px; }
+.search-pagination button { font-size: .75rem; }
+.experience-summary { margin-block-start: 24px; overflow-wrap: anywhere; }
+.experience-summary h4 { font-size: .85rem; margin-block-end: 8px; }
+.experience-summary ul { padding-inline-start: 20px; }
+.experience-summary li { margin-block: 12px; font-size: .85rem; }
+.legacy-details { margin-block-start: 22px; border-block-start: 1px solid var(--border); padding-block-start: 16px; overflow-wrap: anywhere; }
+.legacy-details summary { cursor: pointer; font-size: .85rem; font-weight: 600; }
+.legacy-details > p { margin-block-start: 12px; }
 .game-picker .field { max-width: 400px; margin-block-end: 0; }
 .remove-section { margin-block-start: 20px; padding-block-start: 10px; border-block-start: 1px solid #edf0ea; display: flex; gap: 20px; align-items: center; font-size: .8rem; flex-wrap: wrap; }
 .image-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-block-start: 26px; }

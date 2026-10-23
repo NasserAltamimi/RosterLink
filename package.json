@@ -13,6 +13,7 @@
     "db": "node scripts/local-mongo.js",
     "setup:local": "node scripts/setup-local.js",
     "seed": "node server/seed.js",
+    "sync:games": "node scripts/sync-games.js",
     "build": "vite build",
     "start": "node server/index.js",
     "test": "node --test --test-concurrency=1 tests/*.test.js",

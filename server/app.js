@@ -11,12 +11,14 @@ import { profileRoutes } from './modules/profiles/routes.js';
 import { Game } from './modules/games/model.js';
 import { localImageStorage } from './storage/local-images.js';
 import { HttpError, handleError } from './lib/errors.js';
+import { createTournamentSearch, tournamentRoutes } from './modules/games/tournaments.js';
+import { gameFields } from '../shared/game-form.js';
 
-export function createApp({ mongoUri, sessionSecret, uploadDir, origin, production = false, trustProxy = false }) {
+export function createApp({ mongoUri, sessionSecret, uploadDir, origin, production = false, trustProxy = false, pandaScoreToken, tournamentSearch }) {
   const app = express();
   app.disable('x-powered-by');
   if (trustProxy) app.set('trust proxy', 1);
-  app.use(helmet({ strictTransportSecurity: production ? undefined : false }));
+  app.use(helmet({ strictTransportSecurity: production ? undefined : false, contentSecurityPolicy: { directives: { imgSrc: ["'self'", 'data:', 'https:'] } } }));
   app.use(express.json({ limit: '32kb' }));
   app.use('/api', (req, res, next) => {
     res.set('Cache-Control', 'no-store');
@@ -40,7 +42,8 @@ export function createApp({ mongoUri, sessionSecret, uploadDir, origin, producti
   }));
   app.use('/api', csrfProtection);
   app.use('/api/auth', authRoutes({ secureCookies: production }));
-  app.get('/api/games', async (req, res) => res.json({ games: await Game.find({ enabled: true }).select('-__v').lean() }));
+  app.get('/api/games', async (req, res) => res.json({ games: (await Game.find({ enabled: true }).select('-__v').lean()).map(game => ({ ...game, fields: gameFields, schemaVersion: 2, description: 'Add your platform, play region, communication languages, and availability.' })) }));
+  app.use('/api/games', tournamentRoutes(tournamentSearch || createTournamentSearch({ token: pandaScoreToken })));
   app.use('/api/profiles', profileRoutes(localImageStorage(uploadDir)));
   app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found.' }));
   const dist = resolve('dist');

@@ -1,0 +1,2505 @@
+{
+  "checkedAt": "2026-10-23T22:46:05.011Z",
+  "stages": [
+    {
+      "id": 21625,
+      "name": "Playoffs",
+      "slug": "rl-esports-world-cup-2026-playoffs-7d7d7706-40dc-4f3f-a003-84c933eafea2",
+      "begin_at": "2026-08-15T14:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 10850,
+        "name": "",
+        "year": 2026,
+        "slug": "rl-esports-world-cup-2026",
+        "begin_at": "2026-08-12T08:00:00Z",
+        "end_at": "2026-08-16T19:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-08-14T18:23:29Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21624,
+      "name": "Group B",
+      "slug": "rl-esports-world-cup-2026-playoffs",
+      "begin_at": "2026-08-12T08:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 10850,
+        "name": "",
+        "year": 2026,
+        "slug": "rl-esports-world-cup-2026",
+        "begin_at": "2026-08-12T08:00:00Z",
+        "end_at": "2026-08-16T19:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-08-14T18:23:29Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21623,
+      "name": "Group A",
+      "slug": "rl-esports-world-cup-2026-group-a",
+      "begin_at": "2026-08-12T08:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 10850,
+        "name": "",
+        "year": 2026,
+        "slug": "rl-esports-world-cup-2026",
+        "begin_at": "2026-08-12T08:00:00Z",
+        "end_at": "2026-08-16T19:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-08-14T18:23:29Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 17141,
+      "name": "Playoffs",
+      "slug": "rl-esports-world-cup-2025-playoffs",
+      "begin_at": "2025-08-16T15:30:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 9499,
+        "name": "",
+        "year": 2025,
+        "slug": "rl-esports-world-cup-2025",
+        "begin_at": "2025-08-14T12:00:00Z",
+        "end_at": "2025-08-17T20:56:00Z",
+        "winner_id": 129570,
+        "winner_type": "Team",
+        "modified_at": "2025-08-19T16:00:01Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17140,
+      "name": "Group D",
+      "slug": "rl-esports-world-cup-2025-group-d",
+      "begin_at": "2025-08-14T17:40:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 9499,
+        "name": "",
+        "year": 2025,
+        "slug": "rl-esports-world-cup-2025",
+        "begin_at": "2025-08-14T12:00:00Z",
+        "end_at": "2025-08-17T20:56:00Z",
+        "winner_id": 129570,
+        "winner_type": "Team",
+        "modified_at": "2025-08-19T16:00:01Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17139,
+      "name": "Group C",
+      "slug": "rl-esports-world-cup-2025-group-c",
+      "begin_at": "2025-08-14T15:45:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 9499,
+        "name": "",
+        "year": 2025,
+        "slug": "rl-esports-world-cup-2025",
+        "begin_at": "2025-08-14T12:00:00Z",
+        "end_at": "2025-08-17T20:56:00Z",
+        "winner_id": 129570,
+        "winner_type": "Team",
+        "modified_at": "2025-08-19T16:00:01Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17138,
+      "name": "Group B",
+      "slug": "rl-esports-world-cup-2025-group-b",
+      "begin_at": "2025-08-14T13:45:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 9499,
+        "name": "",
+        "year": 2025,
+        "slug": "rl-esports-world-cup-2025",
+        "begin_at": "2025-08-14T12:00:00Z",
+        "end_at": "2025-08-17T20:56:00Z",
+        "winner_id": 129570,
+        "winner_type": "Team",
+        "modified_at": "2025-08-19T16:00:01Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17137,
+      "name": "Group A",
+      "slug": "rl-esports-world-cup-2025-group-a",
+      "begin_at": "2025-08-14T12:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 9499,
+        "name": "",
+        "year": 2025,
+        "slug": "rl-esports-world-cup-2025",
+        "begin_at": "2025-08-14T12:00:00Z",
+        "end_at": "2025-08-17T20:56:00Z",
+        "winner_id": 129570,
+        "winner_type": "Team",
+        "modified_at": "2025-08-19T16:00:01Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 14293,
+      "name": "Playoffs",
+      "slug": "rl-esports-world-cup-2024-playoffs",
+      "begin_at": "2024-08-24T15:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 7829,
+        "name": "",
+        "year": 2024,
+        "slug": "rl-esports-world-cup-2024",
+        "begin_at": "2024-08-22T13:00:00Z",
+        "end_at": "2024-08-25T15:00:00Z",
+        "winner_id": 127413,
+        "winner_type": "Team",
+        "modified_at": "2024-08-25T15:48:09Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 14292,
+      "name": "Group D",
+      "slug": "rl-esports-world-cup-2024-group-d",
+      "begin_at": "2024-08-22T18:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 7829,
+        "name": "",
+        "year": 2024,
+        "slug": "rl-esports-world-cup-2024",
+        "begin_at": "2024-08-22T13:00:00Z",
+        "end_at": "2024-08-25T15:00:00Z",
+        "winner_id": 127413,
+        "winner_type": "Team",
+        "modified_at": "2024-08-25T15:48:09Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 14291,
+      "name": "Group C",
+      "slug": "rl-esports-world-cup-2024-group-c",
+      "begin_at": "2024-08-22T16:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 7829,
+        "name": "",
+        "year": 2024,
+        "slug": "rl-esports-world-cup-2024",
+        "begin_at": "2024-08-22T13:00:00Z",
+        "end_at": "2024-08-25T15:00:00Z",
+        "winner_id": 127413,
+        "winner_type": "Team",
+        "modified_at": "2024-08-25T15:48:09Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 14290,
+      "name": "Group B",
+      "slug": "rl-esports-world-cup-2024-group-b",
+      "begin_at": "2024-08-22T14:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 7829,
+        "name": "",
+        "year": 2024,
+        "slug": "rl-esports-world-cup-2024",
+        "begin_at": "2024-08-22T13:00:00Z",
+        "end_at": "2024-08-25T15:00:00Z",
+        "winner_id": 127413,
+        "winner_type": "Team",
+        "modified_at": "2024-08-25T15:48:09Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 14289,
+      "name": "Group A",
+      "slug": "rl-esports-world-cup-2024-group-a",
+      "begin_at": "2024-08-22T12:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 22,
+        "name": "Rocket League",
+        "slug": "rl"
+      },
+      "league": {
+        "id": 5284,
+        "name": "Esports World Cup",
+        "url": null,
+        "slug": "rl-esports-world-cup",
+        "modified_at": "2024-08-10T07:49:57Z",
+        "image_url": null
+      },
+      "serie": {
+        "id": 7829,
+        "name": "",
+        "year": 2024,
+        "slug": "rl-esports-world-cup-2024",
+        "begin_at": "2024-08-22T13:00:00Z",
+        "end_at": "2024-08-25T15:00:00Z",
+        "winner_id": 127413,
+        "winner_type": "Team",
+        "modified_at": "2024-08-25T15:48:09Z",
+        "league_id": 5284,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 21555,
+      "name": "Playoffs",
+      "slug": "mlbb-mid-season-cup-2026-playoffs",
+      "begin_at": "2026-07-29T10:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21385,
+      "name": "Group B",
+      "slug": "mlbb-mid-season-cup-2026-group-b",
+      "begin_at": "2026-07-23T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21384,
+      "name": "Group A",
+      "slug": "mlbb-mid-season-cup-2026-group-a",
+      "begin_at": "2026-07-22T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21371,
+      "name": "Wildcard Decider",
+      "slug": "mlbb-mid-season-cup-2026-wildcard-decider",
+      "begin_at": "2026-07-04T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21362,
+      "name": "Cross-Group Gauntlet",
+      "slug": "mlbb-mid-season-cup-2026-cross-group-gauntlet",
+      "begin_at": "2026-07-03T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21341,
+      "name": "Wildcard Group B",
+      "slug": "mlbb-mid-season-cup-2026-wildcard-group-b",
+      "begin_at": "2026-07-01T09:45:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 21340,
+      "name": "Wildcard Group A",
+      "slug": "mlbb-mid-season-cup-2026-wildcard-group-a",
+      "begin_at": "2026-07-01T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 10754,
+        "name": "",
+        "year": 2026,
+        "slug": "mlbb-mid-season-cup-2026",
+        "begin_at": "2026-07-01T09:00:00Z",
+        "end_at": "2026-08-01T14:00:00Z",
+        "winner_id": null,
+        "winner_type": "Team",
+        "modified_at": "2026-07-26T08:20:22Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2026"
+      }
+    },
+    {
+      "id": 17077,
+      "name": "Playoffs",
+      "slug": "mlbb-mid-season-cup-2025-playoffs",
+      "begin_at": "2025-07-30T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 9462,
+        "name": "",
+        "year": 2025,
+        "slug": "mlbb-mid-season-cup-2025",
+        "begin_at": "2025-07-10T09:00:00Z",
+        "end_at": "2025-08-02T22:00:00Z",
+        "winner_id": 135140,
+        "winner_type": "Team",
+        "modified_at": "2026-06-30T09:43:14Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17076,
+      "name": "Group B",
+      "slug": "mlbb-mid-season-cup-2025-group-b",
+      "begin_at": "2025-07-24T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 9462,
+        "name": "",
+        "year": 2025,
+        "slug": "mlbb-mid-season-cup-2025",
+        "begin_at": "2025-07-10T09:00:00Z",
+        "end_at": "2025-08-02T22:00:00Z",
+        "winner_id": 135140,
+        "winner_type": "Team",
+        "modified_at": "2026-06-30T09:43:14Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17075,
+      "name": "Group A",
+      "slug": "mlbb-mid-season-cup-2025-group-a",
+      "begin_at": "2025-07-23T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 9462,
+        "name": "",
+        "year": 2025,
+        "slug": "mlbb-mid-season-cup-2025",
+        "begin_at": "2025-07-10T09:00:00Z",
+        "end_at": "2025-08-02T22:00:00Z",
+        "winner_id": 135140,
+        "winner_type": "Team",
+        "modified_at": "2026-06-30T09:43:14Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17035,
+      "name": "Wildcard Playoffs",
+      "slug": "mlbb-mid-season-cup-2025-wildcard-playoffs",
+      "begin_at": "2025-07-12T12:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 9462,
+        "name": "",
+        "year": 2025,
+        "slug": "mlbb-mid-season-cup-2025",
+        "begin_at": "2025-07-10T09:00:00Z",
+        "end_at": "2025-08-02T22:00:00Z",
+        "winner_id": 135140,
+        "winner_type": "Team",
+        "modified_at": "2026-06-30T09:43:14Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17034,
+      "name": "Wildcard Group B",
+      "slug": "mlbb-mid-season-cup-2025-wildcard-group-b",
+      "begin_at": "2025-07-10T13:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 9462,
+        "name": "",
+        "year": 2025,
+        "slug": "mlbb-mid-season-cup-2025",
+        "begin_at": "2025-07-10T09:00:00Z",
+        "end_at": "2025-08-02T22:00:00Z",
+        "winner_id": 135140,
+        "winner_type": "Team",
+        "modified_at": "2026-06-30T09:43:14Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 17033,
+      "name": "Wildcard Group A",
+      "slug": "mlbb-mid-season-cup-2025-wildcard-group-a",
+      "begin_at": "2025-07-10T09:00:00Z",
+      "type": "offline",
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 9462,
+        "name": "",
+        "year": 2025,
+        "slug": "mlbb-mid-season-cup-2025",
+        "begin_at": "2025-07-10T09:00:00Z",
+        "end_at": "2025-08-02T22:00:00Z",
+        "winner_id": 135140,
+        "winner_type": "Team",
+        "modified_at": "2026-06-30T09:43:14Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2025"
+      }
+    },
+    {
+      "id": 13945,
+      "name": "Playoffs",
+      "slug": "mlbb-mid-season-cup-2024-playoffs",
+      "begin_at": "2024-07-10T08:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13941,
+      "name": "Group A",
+      "slug": "mlbb-mid-season-cup-2024-group-a",
+      "begin_at": "2024-07-03T12:30:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13943,
+      "name": "Group C",
+      "slug": "mlbb-mid-season-cup-2024-group-c",
+      "begin_at": "2024-07-03T11:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13942,
+      "name": "Group B",
+      "slug": "mlbb-mid-season-cup-2024-group-b",
+      "begin_at": "2024-07-03T09:30:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13944,
+      "name": "Group D",
+      "slug": "mlbb-mid-season-cup-2024-group-d",
+      "begin_at": "2024-07-03T08:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13940,
+      "name": "Wildcard Decider",
+      "slug": "mlbb-mid-season-cup-2024-wildcard-decider",
+      "begin_at": "2024-06-30T10:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13939,
+      "name": "Wildcard Group B",
+      "slug": "mlbb-mid-season-cup-2024-wildcard-group-b",
+      "begin_at": "2024-06-29T08:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    },
+    {
+      "id": 13938,
+      "name": "Wildcard Group A",
+      "slug": "mlbb-mid-season-cup-2024-wildcard-group-a",
+      "begin_at": "2024-06-28T08:00:00Z",
+      "type": null,
+      "videogame": {
+        "id": 34,
+        "name": "Mobile Legends: Bang Bang",
+        "slug": "mlbb"
+      },
+      "league": {
+        "id": 5264,
+        "name": "Mid Season Cup",
+        "url": null,
+        "slug": "mlbb-mid-season-cup",
+        "modified_at": "2024-06-22T08:08:23Z",
+        "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+      },
+      "serie": {
+        "id": 7694,
+        "name": "",
+        "year": 2024,
+        "slug": "mlbb-mid-season-cup-2024",
+        "begin_at": "2024-06-28T08:00:00Z",
+        "end_at": "2024-07-14T12:00:00Z",
+        "winner_id": 135141,
+        "winner_type": "Team",
+        "modified_at": "2024-07-14T16:05:04Z",
+        "league_id": 5264,
+        "season": null,
+        "full_name": "2024"
+      }
+    }
+  ],
+  "details": [
+    {
+      "path": "/series/10850",
+      "status": 200,
+      "total": null,
+      "body": {
+        "id": 10850,
+        "league_id": 5284,
+        "league": {
+          "id": 5284,
+          "name": "Esports World Cup",
+          "url": null,
+          "slug": "rl-esports-world-cup",
+          "modified_at": "2024-08-10T07:49:57Z",
+          "image_url": null
+        },
+        "videogame": {
+          "id": 22,
+          "name": "Rocket League",
+          "slug": "rl"
+        }
+      }
+    },
+    {
+      "path": "/series/10850/tournaments",
+      "status": 200,
+      "total": "3",
+      "body": [
+        {
+          "id": 21625,
+          "name": "Playoffs",
+          "serie": {
+            "id": 10850,
+            "name": "",
+            "year": 2026,
+            "slug": "rl-esports-world-cup-2026",
+            "begin_at": "2026-08-12T08:00:00Z",
+            "end_at": "2026-08-16T19:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-08-14T18:23:29Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10850,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2026-playoffs-7d7d7706-40dc-4f3f-a003-84c933eafea2"
+        },
+        {
+          "id": 21624,
+          "name": "Group B",
+          "serie": {
+            "id": 10850,
+            "name": "",
+            "year": 2026,
+            "slug": "rl-esports-world-cup-2026",
+            "begin_at": "2026-08-12T08:00:00Z",
+            "end_at": "2026-08-16T19:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-08-14T18:23:29Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10850,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2026-playoffs"
+        },
+        {
+          "id": 21623,
+          "name": "Group A",
+          "serie": {
+            "id": 10850,
+            "name": "",
+            "year": 2026,
+            "slug": "rl-esports-world-cup-2026",
+            "begin_at": "2026-08-12T08:00:00Z",
+            "end_at": "2026-08-16T19:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-08-14T18:23:29Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10850,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2026-group-a"
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/21625",
+      "status": 200,
+      "total": null,
+      "body": null
+    },
+    {
+      "path": "/tournaments/21625/standings",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "rank": 1
+        },
+        {
+          "rank": 2
+        },
+        {
+          "rank": 3
+        },
+        {
+          "rank": 4
+        },
+        {
+          "rank": 5
+        },
+        {
+          "rank": 6
+        },
+        {
+          "rank": 7
+        },
+        {
+          "rank": 8
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/21625/brackets",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "id": 1619662,
+          "name": "3rd place match",
+          "tournament_id": 21625,
+          "previous_matches": [
+            {
+              "type": "loser",
+              "match_id": 1619659
+            },
+            {
+              "type": "loser",
+              "match_id": 1619660
+            }
+          ]
+        },
+        {
+          "id": 1619661,
+          "name": "Grand final",
+          "tournament_id": 21625,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1619659
+            },
+            {
+              "type": "winner",
+              "match_id": 1619660
+            }
+          ]
+        },
+        {
+          "id": 1619660,
+          "name": "Semifinal 2",
+          "tournament_id": 21625,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1619657
+            },
+            {
+              "type": "winner",
+              "match_id": 1619658
+            }
+          ]
+        },
+        {
+          "id": 1619659,
+          "name": "Semifinal 1",
+          "tournament_id": 21625,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1619655
+            },
+            {
+              "type": "winner",
+              "match_id": 1619656
+            }
+          ]
+        },
+        {
+          "id": 1619658,
+          "name": "Quarterfinal 4",
+          "tournament_id": 21625,
+          "previous_matches": []
+        },
+        {
+          "id": 1619657,
+          "name": "Quarterfinal 3",
+          "tournament_id": 21625,
+          "previous_matches": []
+        },
+        {
+          "id": 1619656,
+          "name": "Quarterfinal 2",
+          "tournament_id": 21625,
+          "previous_matches": []
+        },
+        {
+          "id": 1619655,
+          "name": "Quarterfinal 1",
+          "tournament_id": 21625,
+          "previous_matches": []
+        }
+      ]
+    },
+    {
+      "path": "/series/9499",
+      "status": 200,
+      "total": null,
+      "body": {
+        "id": 9499,
+        "league_id": 5284,
+        "league": {
+          "id": 5284,
+          "name": "Esports World Cup",
+          "url": null,
+          "slug": "rl-esports-world-cup",
+          "modified_at": "2024-08-10T07:49:57Z",
+          "image_url": null
+        },
+        "videogame": {
+          "id": 22,
+          "name": "Rocket League",
+          "slug": "rl"
+        }
+      }
+    },
+    {
+      "path": "/series/9499/tournaments",
+      "status": 200,
+      "total": "5",
+      "body": [
+        {
+          "id": 17141,
+          "name": "Playoffs",
+          "serie": {
+            "id": 9499,
+            "name": "",
+            "year": 2025,
+            "slug": "rl-esports-world-cup-2025",
+            "begin_at": "2025-08-14T12:00:00Z",
+            "end_at": "2025-08-17T20:56:00Z",
+            "winner_id": 129570,
+            "winner_type": "Team",
+            "modified_at": "2025-08-19T16:00:01Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9499,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2025-playoffs"
+        },
+        {
+          "id": 17140,
+          "name": "Group D",
+          "serie": {
+            "id": 9499,
+            "name": "",
+            "year": 2025,
+            "slug": "rl-esports-world-cup-2025",
+            "begin_at": "2025-08-14T12:00:00Z",
+            "end_at": "2025-08-17T20:56:00Z",
+            "winner_id": 129570,
+            "winner_type": "Team",
+            "modified_at": "2025-08-19T16:00:01Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9499,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2025-group-d"
+        },
+        {
+          "id": 17139,
+          "name": "Group C",
+          "serie": {
+            "id": 9499,
+            "name": "",
+            "year": 2025,
+            "slug": "rl-esports-world-cup-2025",
+            "begin_at": "2025-08-14T12:00:00Z",
+            "end_at": "2025-08-17T20:56:00Z",
+            "winner_id": 129570,
+            "winner_type": "Team",
+            "modified_at": "2025-08-19T16:00:01Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9499,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2025-group-c"
+        },
+        {
+          "id": 17138,
+          "name": "Group B",
+          "serie": {
+            "id": 9499,
+            "name": "",
+            "year": 2025,
+            "slug": "rl-esports-world-cup-2025",
+            "begin_at": "2025-08-14T12:00:00Z",
+            "end_at": "2025-08-17T20:56:00Z",
+            "winner_id": 129570,
+            "winner_type": "Team",
+            "modified_at": "2025-08-19T16:00:01Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9499,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2025-group-b"
+        },
+        {
+          "id": 17137,
+          "name": "Group A",
+          "serie": {
+            "id": 9499,
+            "name": "",
+            "year": 2025,
+            "slug": "rl-esports-world-cup-2025",
+            "begin_at": "2025-08-14T12:00:00Z",
+            "end_at": "2025-08-17T20:56:00Z",
+            "winner_id": 129570,
+            "winner_type": "Team",
+            "modified_at": "2025-08-19T16:00:01Z",
+            "league_id": 5284,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9499,
+          "league": {
+            "id": 5284,
+            "name": "Esports World Cup",
+            "url": null,
+            "slug": "rl-esports-world-cup",
+            "modified_at": "2024-08-10T07:49:57Z",
+            "image_url": null
+          },
+          "league_id": 5284,
+          "videogame": {
+            "id": 22,
+            "name": "Rocket League",
+            "slug": "rl"
+          },
+          "slug": "rl-esports-world-cup-2025-group-a"
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/17141",
+      "status": 200,
+      "total": null,
+      "body": null
+    },
+    {
+      "path": "/tournaments/17141/standings",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "rank": 1
+        },
+        {
+          "rank": 2
+        },
+        {
+          "rank": 3
+        },
+        {
+          "rank": 4
+        },
+        {
+          "rank": 5
+        },
+        {
+          "rank": 6
+        },
+        {
+          "rank": 7
+        },
+        {
+          "rank": 8
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/17141/brackets",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "id": 1208939,
+          "name": "3rd place match",
+          "tournament_id": 17141,
+          "previous_matches": [
+            {
+              "type": "loser",
+              "match_id": 1208936
+            },
+            {
+              "type": "loser",
+              "match_id": 1208937
+            }
+          ]
+        },
+        {
+          "id": 1208938,
+          "name": "Grand final",
+          "tournament_id": 17141,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1208936
+            },
+            {
+              "type": "winner",
+              "match_id": 1208937
+            }
+          ]
+        },
+        {
+          "id": 1208937,
+          "name": "Semifinal match 2",
+          "tournament_id": 17141,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1208934
+            },
+            {
+              "type": "winner",
+              "match_id": 1208935
+            }
+          ]
+        },
+        {
+          "id": 1208936,
+          "name": "Semifinal match 1",
+          "tournament_id": 17141,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1208932
+            },
+            {
+              "type": "winner",
+              "match_id": 1208933
+            }
+          ]
+        },
+        {
+          "id": 1208935,
+          "name": "Quarterfinal match 4",
+          "tournament_id": 17141,
+          "previous_matches": []
+        },
+        {
+          "id": 1208934,
+          "name": "Quarterfinal match 3",
+          "tournament_id": 17141,
+          "previous_matches": []
+        },
+        {
+          "id": 1208933,
+          "name": "Quarterfinal match 2",
+          "tournament_id": 17141,
+          "previous_matches": []
+        },
+        {
+          "id": 1208932,
+          "name": "Quarterfinal match 1",
+          "tournament_id": 17141,
+          "previous_matches": []
+        }
+      ]
+    },
+    {
+      "path": "/series/10754",
+      "status": 200,
+      "total": null,
+      "body": {
+        "id": 10754,
+        "league_id": 5264,
+        "league": {
+          "id": 5264,
+          "name": "Mid Season Cup",
+          "url": null,
+          "slug": "mlbb-mid-season-cup",
+          "modified_at": "2024-06-22T08:08:23Z",
+          "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+        },
+        "videogame": {
+          "id": 34,
+          "name": "Mobile Legends: Bang Bang",
+          "slug": "mlbb"
+        }
+      }
+    },
+    {
+      "path": "/series/10754/tournaments",
+      "status": 200,
+      "total": "7",
+      "body": [
+        {
+          "id": 21555,
+          "name": "Playoffs",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-playoffs"
+        },
+        {
+          "id": 21385,
+          "name": "Group B",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-group-b"
+        },
+        {
+          "id": 21384,
+          "name": "Group A",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-group-a"
+        },
+        {
+          "id": 21371,
+          "name": "Wildcard Decider",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-wildcard-decider"
+        },
+        {
+          "id": 21362,
+          "name": "Cross-Group Gauntlet",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-cross-group-gauntlet"
+        },
+        {
+          "id": 21341,
+          "name": "Wildcard Group B",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-wildcard-group-b"
+        },
+        {
+          "id": 21340,
+          "name": "Wildcard Group A",
+          "serie": {
+            "id": 10754,
+            "name": "",
+            "year": 2026,
+            "slug": "mlbb-mid-season-cup-2026",
+            "begin_at": "2026-07-01T09:00:00Z",
+            "end_at": "2026-08-01T14:00:00Z",
+            "winner_id": null,
+            "winner_type": "Team",
+            "modified_at": "2026-07-26T08:20:22Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2026"
+          },
+          "serie_id": 10754,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2026-wildcard-group-a"
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/21555",
+      "status": 200,
+      "total": null,
+      "body": null
+    },
+    {
+      "path": "/tournaments/21555/standings",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "rank": 1
+        },
+        {
+          "rank": 2
+        },
+        {
+          "rank": 3
+        },
+        {
+          "rank": 4
+        },
+        {
+          "rank": 5
+        },
+        {
+          "rank": 6
+        },
+        {
+          "rank": 7
+        },
+        {
+          "rank": 8
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/21555/brackets",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "id": 1606278,
+          "name": "3rd Place match",
+          "tournament_id": 21555,
+          "previous_matches": [
+            {
+              "type": "loser",
+              "match_id": 1606275
+            },
+            {
+              "type": "loser",
+              "match_id": 1606276
+            }
+          ]
+        },
+        {
+          "id": 1606277,
+          "name": "Grand final",
+          "tournament_id": 21555,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1606275
+            },
+            {
+              "type": "winner",
+              "match_id": 1606276
+            }
+          ]
+        },
+        {
+          "id": 1606276,
+          "name": "Semifinal 2",
+          "tournament_id": 21555,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1606273
+            },
+            {
+              "type": "winner",
+              "match_id": 1606274
+            }
+          ]
+        },
+        {
+          "id": 1606275,
+          "name": "Semifinal 1",
+          "tournament_id": 21555,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1606271
+            },
+            {
+              "type": "winner",
+              "match_id": 1606272
+            }
+          ]
+        },
+        {
+          "id": 1606274,
+          "name": "Quarterfinal 4",
+          "tournament_id": 21555,
+          "previous_matches": []
+        },
+        {
+          "id": 1606273,
+          "name": "Quarterfinal 3",
+          "tournament_id": 21555,
+          "previous_matches": []
+        },
+        {
+          "id": 1606272,
+          "name": "Quarterfinal 2",
+          "tournament_id": 21555,
+          "previous_matches": []
+        },
+        {
+          "id": 1606271,
+          "name": "Quarterfinal 1",
+          "tournament_id": 21555,
+          "previous_matches": []
+        }
+      ]
+    },
+    {
+      "path": "/series/9462",
+      "status": 200,
+      "total": null,
+      "body": {
+        "id": 9462,
+        "league_id": 5264,
+        "league": {
+          "id": 5264,
+          "name": "Mid Season Cup",
+          "url": null,
+          "slug": "mlbb-mid-season-cup",
+          "modified_at": "2024-06-22T08:08:23Z",
+          "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+        },
+        "videogame": {
+          "id": 34,
+          "name": "Mobile Legends: Bang Bang",
+          "slug": "mlbb"
+        }
+      }
+    },
+    {
+      "path": "/series/9462/tournaments",
+      "status": 200,
+      "total": "6",
+      "body": [
+        {
+          "id": 17077,
+          "name": "Playoffs",
+          "serie": {
+            "id": 9462,
+            "name": "",
+            "year": 2025,
+            "begin_at": "2025-07-10T09:00:00Z",
+            "end_at": "2025-08-02T22:00:00Z",
+            "winner_id": 135140,
+            "winner_type": "Team",
+            "slug": "mlbb-mid-season-cup-2025",
+            "modified_at": "2026-06-30T09:43:14Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9462,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2025-playoffs"
+        },
+        {
+          "id": 17076,
+          "name": "Group B",
+          "serie": {
+            "id": 9462,
+            "name": "",
+            "year": 2025,
+            "begin_at": "2025-07-10T09:00:00Z",
+            "end_at": "2025-08-02T22:00:00Z",
+            "winner_id": 135140,
+            "winner_type": "Team",
+            "slug": "mlbb-mid-season-cup-2025",
+            "modified_at": "2026-06-30T09:43:14Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9462,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2025-group-b"
+        },
+        {
+          "id": 17075,
+          "name": "Group A",
+          "serie": {
+            "id": 9462,
+            "name": "",
+            "year": 2025,
+            "begin_at": "2025-07-10T09:00:00Z",
+            "end_at": "2025-08-02T22:00:00Z",
+            "winner_id": 135140,
+            "winner_type": "Team",
+            "slug": "mlbb-mid-season-cup-2025",
+            "modified_at": "2026-06-30T09:43:14Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9462,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2025-group-a"
+        },
+        {
+          "id": 17035,
+          "name": "Wildcard Playoffs",
+          "serie": {
+            "id": 9462,
+            "name": "",
+            "year": 2025,
+            "begin_at": "2025-07-10T09:00:00Z",
+            "end_at": "2025-08-02T22:00:00Z",
+            "winner_id": 135140,
+            "winner_type": "Team",
+            "slug": "mlbb-mid-season-cup-2025",
+            "modified_at": "2026-06-30T09:43:14Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9462,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2025-wildcard-playoffs"
+        },
+        {
+          "id": 17034,
+          "name": "Wildcard Group B",
+          "serie": {
+            "id": 9462,
+            "name": "",
+            "year": 2025,
+            "begin_at": "2025-07-10T09:00:00Z",
+            "end_at": "2025-08-02T22:00:00Z",
+            "winner_id": 135140,
+            "winner_type": "Team",
+            "slug": "mlbb-mid-season-cup-2025",
+            "modified_at": "2026-06-30T09:43:14Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9462,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2025-wildcard-group-b"
+        },
+        {
+          "id": 17033,
+          "name": "Wildcard Group A",
+          "serie": {
+            "id": 9462,
+            "name": "",
+            "year": 2025,
+            "begin_at": "2025-07-10T09:00:00Z",
+            "end_at": "2025-08-02T22:00:00Z",
+            "winner_id": 135140,
+            "winner_type": "Team",
+            "slug": "mlbb-mid-season-cup-2025",
+            "modified_at": "2026-06-30T09:43:14Z",
+            "league_id": 5264,
+            "season": null,
+            "full_name": "2025"
+          },
+          "serie_id": 9462,
+          "league": {
+            "id": 5264,
+            "name": "Mid Season Cup",
+            "url": null,
+            "slug": "mlbb-mid-season-cup",
+            "modified_at": "2024-06-22T08:08:23Z",
+            "image_url": "https://cdn-api.pandascore.co/images/league/image/5264/597px-mlbb_mid_season_cup_2024_allmode-png"
+          },
+          "league_id": 5264,
+          "videogame": {
+            "id": 34,
+            "name": "Mobile Legends: Bang Bang",
+            "slug": "mlbb"
+          },
+          "slug": "mlbb-mid-season-cup-2025-wildcard-group-a"
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/17077",
+      "status": 200,
+      "total": null,
+      "body": null
+    },
+    {
+      "path": "/tournaments/17077/standings",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "rank": 1
+        },
+        {
+          "rank": 2
+        },
+        {
+          "rank": 3
+        },
+        {
+          "rank": 4
+        },
+        {
+          "rank": 5
+        },
+        {
+          "rank": 6
+        },
+        {
+          "rank": 7
+        },
+        {
+          "rank": 8
+        }
+      ]
+    },
+    {
+      "path": "/tournaments/17077/brackets",
+      "status": 200,
+      "total": "8",
+      "body": [
+        {
+          "id": 1205999,
+          "name": "Grand final",
+          "tournament_id": 17077,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1205996
+            },
+            {
+              "type": "winner",
+              "match_id": 1205997
+            }
+          ]
+        },
+        {
+          "id": 1205998,
+          "name": "3rd place decider",
+          "tournament_id": 17077,
+          "previous_matches": [
+            {
+              "type": "loser",
+              "match_id": 1205996
+            },
+            {
+              "type": "loser",
+              "match_id": 1205997
+            }
+          ]
+        },
+        {
+          "id": 1205997,
+          "name": "Semifinal 2",
+          "tournament_id": 17077,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1205994
+            },
+            {
+              "type": "winner",
+              "match_id": 1205995
+            }
+          ]
+        },
+        {
+          "id": 1205996,
+          "name": "Semifinal 1",
+          "tournament_id": 17077,
+          "previous_matches": [
+            {
+              "type": "winner",
+              "match_id": 1205992
+            },
+            {
+              "type": "winner",
+              "match_id": 1205993
+            }
+          ]
+        },
+        {
+          "id": 1205995,
+          "name": "Quarterfinal 4",
+          "tournament_id": 17077,
+          "previous_matches": []
+        },
+        {
+          "id": 1205994,
+          "name": "Quarterfinal 3",
+          "tournament_id": 17077,
+          "previous_matches": []
+        },
+        {
+          "id": 1205993,
+          "name": "Quarterfinal 2",
+          "tournament_id": 17077,
+          "previous_matches": []
+        },
+        {
+          "id": 1205992,
+          "name": "Quarterfinal 1",
+          "tournament_id": 17077,
+          "previous_matches": []
+        }
+      ]
+    }
+  ]
+}

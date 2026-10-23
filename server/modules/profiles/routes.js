@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { requireUser } from '../auth/routes.js';
 import { PlayerProfile, PlayerGame } from './model.js';
 import { Game } from '../games/model.js';
-import { validateGameDetails } from '../games/catalog.js';
+import { sharedDetailsInput, experienceInput } from '../games/player-form.js';
+import { sharedDetails } from '../../../shared/game-form.js';
 import { HttpError, parse } from '../../lib/errors.js';
 
 const profileInput = z.object({
@@ -14,7 +15,7 @@ const profileInput = z.object({
   region: z.string().trim().min(1, 'Enter your region.').max(80),
   languages: z.array(z.string().trim().min(1).max(40)).min(1, 'Enter at least one language.').max(8).transform(values => [...new Set(values)]),
 }).strict();
-const gameInput = z.object({ gameId: z.string().regex(/^[a-f0-9]{24}$/i), details: z.record(z.string(), z.string()) }).strict();
+const gameInput = z.object({ gameId: z.string().regex(/^[a-f0-9]{24}$/i), details: sharedDetailsInput, experience: experienceInput.optional() }).strict();
 const gameUpdate = gameInput.omit({ gameId: true });
 const validId = id => { if (!mongoose.isObjectIdOrHexString(id)) throw new HttpError(404, 'Profile or game section not found.'); };
 
@@ -27,7 +28,7 @@ function profileDto(profile) {
     headerImageUrl: profile.headerImage ? imageUrl('header') : null,
   };
 }
-const sectionDto = section => ({ id: section.id, gameId: String(section.game), details: Object.fromEntries(section.details), source: section.source, updatedAt: section.updatedAt });
+const sectionDto = section => ({ id: section.id, gameId: String(section.game), details: Object.fromEntries(section.details), sharedDetails: sharedDetails(Object.fromEntries(section.details)), legacyDetails: section.legacyDetails ? Object.fromEntries(section.legacyDetails) : section.schemaVersion < 2 ? Object.fromEntries(section.details) : {}, experience: section.experience || [], schemaVersion: section.schemaVersion, source: section.source, updatedAt: section.updatedAt });
 async function payload(profile) {
   return { profile: profileDto(profile), sections: (await PlayerGame.find({ profile: profile._id })).map(sectionDto) };
 }
@@ -59,23 +60,24 @@ export function profileRoutes(storage) {
     res.json(await payload(profile));
   });
 
-  async function detailsFor(gameId, details) {
+  async function detailsFor(gameId, details, experience) {
     validId(gameId);
     const game = await Game.findOne({ _id: gameId, enabled: true });
     if (!game) throw new HttpError(400, 'Choose a supported game.');
-    const validated = validateGameDetails(game, details);
-    if (Object.keys(validated.errors).length) throw new HttpError(400, 'Please check the game details.', validated.errors);
-    return { details: validated.details, schemaVersion: game.schemaVersion };
+    if (experience?.some(entry => (entry.tournament && entry.tournament.gameId !== game.providerId) || (entry.competition && entry.competition.gameId !== game.providerId))) throw new HttpError(400, 'Select a competition for this game, or enter it manually.');
+    return { details, schemaVersion: 2, ...(experience !== undefined ? { experience } : {}) };
   }
   router.post('/:profileId/games', async (req, res) => {
-    const { gameId, details } = parse(gameInput, req.body);
-    const values = await detailsFor(gameId, details);
+    const { gameId, details, experience } = parse(gameInput, req.body);
+    const values = await detailsFor(gameId, details, experience);
     const section = await PlayerGame.create({ profile: req.profile._id, game: gameId, ...values });
     res.status(201).json({ section: sectionDto(section) });
   });
   router.put('/:profileId/games/:gameId', async (req, res) => {
-    const { details } = parse(gameUpdate, req.body);
-    const values = await detailsFor(req.params.gameId, details);
+    const { details, experience } = parse(gameUpdate, req.body);
+    const values = await detailsFor(req.params.gameId, details, experience);
+    const existing = await PlayerGame.findOne({ profile: req.profile._id, game: req.params.gameId });
+    if (existing?.schemaVersion < 2) values.legacyDetails = Object.fromEntries(existing.details);
     const section = await PlayerGame.findOneAndUpdate({ profile: req.profile._id, game: req.params.gameId }, { $set: values }, { returnDocument: 'after', runValidators: true });
     if (!section) throw new HttpError(404, 'Game section not found.');
     res.json({ section: sectionDto(section) });

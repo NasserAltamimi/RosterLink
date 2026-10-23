@@ -5,6 +5,8 @@ import ProfileForm from './ProfileForm.jsx';
 import Images from './Images.jsx';
 import Games from './Games.jsx';
 import { Brand, Loading, Notice } from './components.jsx';
+import { LegacyDetails } from './Experience.jsx';
+import { gameFields } from '../shared/game-form.js';
 
 function Overview({ profile, sections, games, navigate }) {
   return <>
@@ -19,8 +21,11 @@ function Overview({ profile, sections, games, navigate }) {
     <div className="section-title"><div><p className="eyebrow">WHERE YOU COMPETE</p><h2>Game experience</h2></div><button className="text-button" onClick={() => navigate('games')}>Manage games ↗</button></div>
     {sections.length ? sections.map(section => {
       const game = games.find(game => game._id === section.gameId);
-      return <section className="card game-summary" key={section.id}><div className="game-monogram" aria-hidden="true">{game?.name.split(' ').map(word => word[0]).join('') || 'G'}</div><div className="game-summary-body"><div className="section-heading"><h3>{game?.name || 'Saved game'}</h3><span className="badge">Self-reported</span></div><dl className="game-details">{(game?.fields || []).filter(field => section.details[field.key]).map(field => <div key={field.key}><dt>{field.label}</dt><dd dir="auto">{section.details[field.key]}</dd></div>)}</dl></div></section>;
-    }) : <section className="card empty-state"><span className="empty-symbol" aria-hidden="true">＋</span><h3>Put your game on the map.</h3><p className="muted">Add your Rocket League playlist, rank, and availability.</p><button className="button primary" onClick={() => navigate('games')}>Add your first game ↗</button></section>}
+      return <section className="card game-summary" key={section.id}><div className="game-monogram" aria-hidden="true">{game?.name.split(' ').map(word => word[0]).join('') || 'G'}</div><div className="game-summary-body"><div className="section-heading"><h3>{game?.name || 'Saved game'}</h3><span className="badge">Self-reported</span></div><dl className="game-details">{gameFields.filter(field => section.details[field.key]).map(field => <div key={field.key}><dt>{field.label}</dt><dd dir="auto">{section.details[field.key]}</dd></div>)}</dl>
+        {Boolean(section.experience?.length) && <div className="experience-summary"><h4>Competitive experience · Self-reported</h4><p className="muted small">Competition metadata does not verify identity, participation, or results.</p><ul>{section.experience.map((entry, index) => <li key={index}><strong dir="auto">{entry.name}</strong> <span dir="auto">{entry.edition}{entry.stage && ` · ${entry.stage}`} · {entry.placement}</span><p className="muted small">{entry.tournament || entry.competition ? 'Metadata: PandaScore' : 'Metadata: manual'} · Participation and results: self-reported</p></li>)}</ul></div>}
+        <LegacyDetails details={section.legacyDetails} />
+      </div></section>;
+    }) : <section className="card empty-state"><span className="empty-symbol" aria-hidden="true">＋</span><h3>Put your game on the map.</h3><p className="muted">Add your game experience, rank, and availability.</p><button className="button primary" onClick={() => navigate('games')}>Add your first game ↗</button></section>}
   </>;
 }
 

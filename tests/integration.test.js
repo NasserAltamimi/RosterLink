@@ -12,8 +12,11 @@ import { User } from '../server/modules/auth/model.js';
 import { PlayerProfile, PlayerGame } from '../server/modules/profiles/model.js';
 import { Game } from '../server/modules/games/model.js';
 import { seedGames } from '../server/modules/games/catalog.js';
+import { syncPandaScoreGames } from '../server/modules/games/pandascore.js';
+import { createTournamentSearch } from '../server/modules/games/tournaments.js';
+import { fixtureFetch } from './fixtures/competition-provider.js';
 
-const details = { playlist: '2v2 Doubles', rank: 'Champion II', division: 'III', season: 'Season 20', preference: 'Flexible / rotation-based', server: 'Middle East', language: 'Arabic / English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh' };
+const details = { platform: 'PC', rank: 'Champion II', server: 'Middle East', language: 'Arabic / English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh; tryouts Fri' };
 const profileValues = { displayName: 'PilotPlayer', bio: 'Ready to learn and compete.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] };
 const password = 'A long demo passphrase 2026!';
 let mongo, app, directory, config, game, image;
@@ -26,6 +29,7 @@ before(async () => {
   await mkdir(join(directory, 'mongo'));
   mongo = await MongoMemoryServer.create({ binary: { version: '8.0.17', downloadDir: resolve('.local-data/mongodb-binaries') }, instance: { dbName: 'rosterlink_integration', dbPath: join(directory, 'mongo'), storageEngine: 'wiredTiger' } });
   config = { mongoUri: mongo.getUri('rosterlink_integration'), sessionSecret: 'integration-secret-only-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5173' };
+  config.tournamentSearch = createTournamentSearch({ token: 'test-only', fetchImpl: fixtureFetch });
   await connectDatabase(config.mongoUri);
   await Promise.all([User.init(), PlayerProfile.init(), PlayerGame.init(), Game.init()]);
   await seedGames();
@@ -59,6 +63,29 @@ async function createProfile(user) {
   const result = await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(profileValues).expect(201);
   return result.body.profile;
 }
+
+test('provider catalog sync preserves Rocket League, updates icons and allows additional game profiles', async () => {
+  let catalog = [{ id: 22, name: 'Rocket League', slug: 'rl' }, { id: 26, name: 'Valorant', slug: 'valorant', image_url: 'https://example.com/valorant.png' }];
+  const options = { token: 'test-only-token', fetchImpl: async () => ({ ok: true, json: async () => catalog }) };
+  assert.deepEqual(await syncPandaScoreGames(options), { count: 2, withImages: 1 });
+  await syncPandaScoreGames(options);
+  assert.equal(await Game.countDocuments({ providerId: 22 }), 1);
+  const preserved = await Game.findById(game._id);
+  assert.equal(preserved.fields[0].key, 'platform');
+  const imported = await Game.findOne({ slug: 'valorant' });
+  const response = await request(app).get('/api/games').expect(200);
+  assert.equal(response.body.games.find(item => item.slug === 'valorant').imageUrl, 'https://example.com/valorant.png');
+  const user = await register();
+  const profile = await createProfile(user);
+  await user.agent.post(`/api/profiles/${profile.id}/games`).set('X-CSRF-Token', user.token).send({ gameId: String(imported._id), details: { platform: 'PC', server: 'Middle East', language: 'English', availability: 'Fri 20:00 Asia/Riyadh' } }).expect(201);
+  catalog = [{ id: 26, name: 'Valorant', slug: 'valorant' }];
+  await syncPandaScoreGames(options);
+  assert.equal((await Game.findById(imported._id)).imageUrl, null);
+  await assert.rejects(syncPandaScoreGames({ ...options, fetchImpl: async () => ({ ok: false, status: 503 }) }), /HTTP 503/);
+  assert.ok(await Game.findById(imported._id));
+  await PlayerGame.deleteMany({ game: imported._id });
+  await Game.deleteOne({ _id: imported._id });
+});
 
 test('SF-01: registration persists a normalized unique email and a hash, without leaking credentials', async () => {
   const user = await register(' Registration@Example.com ');
@@ -133,16 +160,16 @@ test('SF-04: required/overlong data and ownership mass assignment are rejected',
   }
 });
 
-test('SF-05 / SF-06: catalog-driven game create/edit/read/delete, duplicate prevention and option validation', async () => {
+test('SF-05 / SF-06: shared game create/edit/read/delete, duplicate prevention and required field validation', async () => {
   const user = await register(); const profile = await createProfile(user);
   const catalog = await user.agent.get('/api/games').expect(200);
   assert.equal(catalog.body.games.length, 1); assert.equal(catalog.body.games[0].name, 'Rocket League');
   const path = `/api/profiles/${profile.id}/games`;
-  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details: { ...details, rank: 'Radiant' } }).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details: { ...details, platform: 'Invalid' } }).expect(400);
   await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: new mongoose.Types.ObjectId().toString(), details }).expect(400);
   await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details }).expect(201);
   await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details }).expect(409);
-  await user.agent.put(`${path}/${game.id}`).set('X-CSRF-Token', user.token).send({ details: { ...details, division: 'V' } }).expect(400);
+  await user.agent.put(`${path}/${game.id}`).set('X-CSRF-Token', user.token).send({ details: { ...details, server: ' ' } }).expect(400);
   const changed = { ...details, rank: 'Diamond III' };
   await user.agent.put(`${path}/${game.id}`).set('X-CSRF-Token', user.token).send({ details: changed }).expect(200);
   const result = await user.agent.get('/api/profiles/me');
@@ -150,6 +177,69 @@ test('SF-05 / SF-06: catalog-driven game create/edit/read/delete, duplicate prev
   assert.equal(result.body.sections[0].source, 'self_reported');
   await user.agent.delete(`${path}/${game.id}`).set('X-CSRF-Token', user.token).expect(204);
   assert.equal((await user.agent.get('/api/profiles/me')).body.sections.length, 0);
+});
+
+test('tournament search is authenticated and uses provider IDs; multiple self-reported entries persist and can be edited/deleted', async () => {
+  await request(app).get(`/api/games/${game.id}/tournaments?q=ewc`).expect(401);
+  const user = await register(); const profile = await createProfile(user);
+  const other = await Game.create({ slug: 'local-name-different-from-provider', providerId: 34, name: 'Mobile Legends: Bang Bang', enabled: true, schemaVersion: 2, fields: [] });
+  const catalogs = await user.agent.get('/api/games').expect(200);
+  assert.deepEqual(catalogs.body.games.map(item => item.fields), Array(catalogs.body.games.length).fill(catalogs.body.games[0].fields));
+  const search = await user.agent.get(`/api/games/${other.id}/tournaments?q=ewc&page=1`).expect(200);
+  assert.equal(search.body.competitions[0].competition.gameId, 34);
+  const selected = search.body.competitions.find(row => row.competition.seriesId === 10754);
+  const detail = await user.agent.get(`/api/games/${other.id}/competitions/10754?leagueId=5264`).expect(200);
+  assert.equal(detail.body.competition.stageIds.length, 7);
+  await user.agent.get(`/api/games/${game.id}/competitions/10754?leagueId=5264`).expect(404);
+  await user.agent.get(`/api/games/${other.id}/tournaments?q=a`).expect(400);
+  await user.agent.get(`/api/games/${other.id}/tournaments?q=ewc&page=21`).expect(400);
+  await user.agent.get('/api/games/not-an-id/tournaments?q=ewc').expect(404);
+  const path = `/api/profiles/${profile.id}/games`;
+  const experience = [{ name: selected.name, edition: selected.edition, competition: detail.body.competition, placement: '1st', result: { kind: 'exact', value: '1' } }, { name: 'Local LAN', edition: 'Summer 2025', placement: 'Runner-up' }];
+  // No participation, identity, or result comparison is performed.
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: other.id, details: { ...details, server: 'Custom old server', rank: '' }, experience }).expect(201);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details, experience: [] }).expect(201);
+  let restored = (await user.agent.get('/api/profiles/me')).body.sections;
+  assert.equal(restored.length, 2);
+  assert.equal(restored.find(item => item.gameId === other.id).experience[0].placement, '1st');
+  assert.equal(restored.find(item => item.gameId === other.id).details.server, 'Custom old server');
+  assert.deepEqual(restored.find(item => item.gameId === other.id).experience[0].competition.stageIds, detail.body.competition.stageIds);
+  assert.equal(restored.find(item => item.gameId === other.id).experience[0].result.kind, 'exact');
+  assert.equal(restored.find(item => item.gameId === other.id).source, 'self_reported');
+  for (const field of ['name', 'edition', 'placement']) await user.agent.put(`${path}/${other.id}`).set('X-CSRF-Token', user.token).send({ details, experience: [{ ...experience[0], [field]: ' ' }] }).expect(400);
+  await user.agent.put(`${path}/${game.id}`).set('X-CSRF-Token', user.token).send({ details, experience }).expect(400);
+  const stranger = await register();
+  await stranger.agent.put(`${path}/${other.id}`).set('X-CSRF-Token', stranger.token).send({ details, experience: [] }).expect(404);
+  await stranger.agent.get(`/api/profiles/${profile.id}`).expect(404);
+  await user.agent.put(`${path}/${other.id}`).set('X-CSRF-Token', user.token).send({ details, experience: [{ ...experience[0], placement: 'Top 8' }] }).expect(200);
+  restored = (await user.agent.get('/api/profiles/me')).body.sections.find(item => item.gameId === other.id);
+  assert.equal(restored.experience.length, 1); assert.equal(restored.experience[0].placement, 'Top 8');
+  await user.agent.put(`${path}/${other.id}`).set('X-CSRF-Token', user.token).send({ details, experience: [] }).expect(200);
+  assert.equal((await user.agent.get('/api/profiles/me')).body.sections.find(item => item.gameId === other.id).experience.length, 0);
+  await PlayerGame.deleteMany({ game: other._id }); await Game.deleteOne({ _id: other._id });
+});
+
+test('legacy Rocket League and generic details remain readable and survive shared-form updates without guessing platform', async () => {
+  const user = await register(); const profile = await createProfile(user);
+  const original = { playlist: '2v2 Doubles', rank: 'Champion II', division: 'III', season: 'Season 20', preference: 'Flexible / rotation-based', server: 'Middle East', language: 'Arabic / English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh' };
+  await PlayerGame.create({ profile: profile.id, game: game.id, details: original, schemaVersion: 1 });
+  let restored = (await user.agent.get('/api/profiles/me')).body.sections[0];
+  assert.deepEqual(restored.details, original); assert.deepEqual(restored.legacyDetails, original);
+  assert.equal(restored.sharedDetails.platform, undefined);
+  assert.equal(restored.sharedDetails.rank, original.rank);
+  const path = `/api/profiles/${profile.id}/games/${game.id}`;
+  await user.agent.put(path).set('X-CSRF-Token', user.token).send({ details: restored.sharedDetails }).expect(400);
+  await user.agent.put(path).set('X-CSRF-Token', user.token).send({ details }).expect(200);
+  await user.agent.put(path).set('X-CSRF-Token', user.token).send({ details: { ...details, rank: 'Anything' } }).expect(200);
+  restored = (await user.agent.get('/api/profiles/me')).body.sections[0];
+  assert.deepEqual(restored.legacyDetails, original); assert.equal(restored.schemaVersion, 2);
+  const other = await Game.create({ slug: 'legacy-generic', providerId: 26, name: 'Legacy generic', schemaVersion: 1, fields: [] });
+  const generic = { playerName: 'OldPlayer', preference: 'Support', server: 'Europe', language: 'English', availability: 'Fridays' };
+  await PlayerGame.create({ profile: profile.id, game: other.id, details: generic, schemaVersion: 1 });
+  await user.agent.put(`/api/profiles/${profile.id}/games/${other.id}`).set('X-CSRF-Token', user.token).send({ details }).expect(200);
+  restored = (await user.agent.get('/api/profiles/me')).body.sections.find(item => item.gameId === other.id);
+  assert.deepEqual(restored.legacyDetails, generic);
+  await PlayerGame.deleteMany({ game: other.id }); await Game.deleteOne({ _id: other.id });
 });
 
 test('TF-03: unique indexes protect email, player ownership and game sections at database level', async () => {

@@ -4,7 +4,7 @@ export class ApiError extends Error {
   constructor(message, status, fields = {}) { super(message); this.status = status; this.fields = fields; }
 }
 
-export async function api(path, { method = 'GET', body } = {}) {
+export async function api(path, { method = 'GET', body, timeout = 15000 } = {}) {
   if (method !== 'GET' && !csrfToken) await api('/auth/session');
   const headers = {};
   if (method !== 'GET') headers['X-CSRF-Token'] = csrfToken || '';
@@ -13,7 +13,7 @@ export async function api(path, { method = 'GET', body } = {}) {
   try {
     response = await fetch(`/api${path}`, { method, headers, credentials: 'same-origin',
       body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(timeout),
     });
   } catch { throw new ApiError('Cannot connect to RosterLink. Check your connection and try again.', 0); }
   const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
