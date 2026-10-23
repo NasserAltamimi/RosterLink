@@ -1,0 +1,245 @@
+import { before, after, test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdir, mkdtemp, readdir, rm } from 'node:fs/promises';
+import { resolve, join } from 'node:path';
+import mongoose from 'mongoose';
+import request from 'supertest';
+import sharp from 'sharp';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import { createApp } from '../server/app.js';
+import { connectDatabase } from '../server/db.js';
+import { User } from '../server/modules/auth/model.js';
+import { PlayerProfile, PlayerGame } from '../server/modules/profiles/model.js';
+import { Game } from '../server/modules/games/model.js';
+import { seedGames } from '../server/modules/games/catalog.js';
+
+const details = { playlist: '2v2 Doubles', rank: 'Champion II', division: 'III', season: 'Season 20', preference: 'Flexible / rotation-based', server: 'Middle East', language: 'Arabic / English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh' };
+const profileValues = { displayName: 'PilotPlayer', bio: 'Ready to learn and compete.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] };
+const password = 'A long demo passphrase 2026!';
+let mongo, app, directory, config, game, image;
+let serial = 0;
+const newEmail = () => `test-${++serial}@example.com`;
+
+before(async () => {
+  await mkdir('.local-data', { recursive: true });
+  directory = await mkdtemp(resolve('.local-data/integration-'));
+  await mkdir(join(directory, 'mongo'));
+  mongo = await MongoMemoryServer.create({ binary: { version: '8.0.17', downloadDir: resolve('.local-data/mongodb-binaries') }, instance: { dbName: 'rosterlink_integration', dbPath: join(directory, 'mongo'), storageEngine: 'wiredTiger' } });
+  config = { mongoUri: mongo.getUri('rosterlink_integration'), sessionSecret: 'integration-secret-only-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5173' };
+  await connectDatabase(config.mongoUri);
+  await Promise.all([User.init(), PlayerProfile.init(), PlayerGame.init(), Game.init()]);
+  await seedGames();
+  game = await Game.findOne({ slug: 'rocket-league' });
+  app = createApp(config);
+  image = await sharp({ create: { width: 120, height: 80, channels: 3, background: '#4b805a' } }).png().toBuffer();
+}, { timeout: 180000 });
+
+after(async () => {
+  await app?.locals.sessionStore.close();
+  await mongoose.disconnect();
+  await mongo?.stop();
+  // Only the uniquely generated test directory under this workspace is removed.
+  if (directory) await rm(directory, { recursive: true, force: true });
+});
+
+async function visitor() {
+  const agent = request.agent(app);
+  const result = await agent.get('/api/auth/session').expect(200);
+  return { agent, token: result.body.csrfToken };
+}
+async function register(email = newEmail()) {
+  const user = await visitor();
+  const result = await user.agent.post('/api/auth/register').set('X-CSRF-Token', user.token).send({ email, password }).expect(201);
+  return { ...user, token: result.body.csrfToken, email, id: result.body.user.id };
+}
+async function createProfile(user) {
+  const result = await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(profileValues).expect(201);
+  return result.body.profile;
+}
+
+test('SF-01: registration persists a normalized unique email and a hash, without leaking credentials', async () => {
+  const user = await register(' Registration@Example.com ');
+  const stored = await User.findById(user.id).select('+passwordHash');
+  assert.equal(stored.email, 'registration@example.com');
+  assert.match(stored.passwordHash, /^scrypt\$/);
+  assert.notEqual(stored.passwordHash, password);
+  const session = await user.agent.get('/api/auth/session').expect(200);
+  assert.equal(session.body.user.email, 'registration@example.com');
+  assert.ok(!JSON.stringify(session.body).includes('password'));
+  const duplicate = await visitor();
+  await duplicate.agent.post('/api/auth/register').set('X-CSRF-Token', duplicate.token).send({ email: 'REGISTRATION@example.com', password }).expect(409);
+});
+
+test('SF-01 / TF-04: invalid registration, query injection and client-chosen roles are rejected', async () => {
+  const user = await visitor();
+  for (const body of [{}, { email: 'invalid', password }, { email: newEmail(), password: 'short' }, { email: { $ne: null }, password }, { email: newEmail(), password, role: 'admin' }]) {
+    await user.agent.post('/api/auth/register').set('X-CSRF-Token', user.token).send(body).expect(400);
+  }
+});
+
+test('SF-02 / TF-04: invalid login, valid login, cookie flags, session rotation, logout and replay rejection', async () => {
+  const user = await register();
+  const oldCookie = (await user.agent.get('/api/auth/session')).headers['set-cookie'];
+  await user.agent.post('/api/auth/logout').set('X-CSRF-Token', user.token).expect(204);
+  await user.agent.get('/api/profiles/me').expect(401);
+  const session = await user.agent.get('/api/auth/session');
+  user.token = session.body.csrfToken;
+  for (const email of [user.email, 'missing@example.com']) {
+    const result = await user.agent.post('/api/auth/login').set('X-CSRF-Token', user.token).send({ email, password: 'wrong' }).expect(401);
+    assert.equal(result.body.message, 'Email or password is incorrect.');
+  }
+  const login = await user.agent.post('/api/auth/login').set('X-CSRF-Token', user.token).send({ email: user.email, password }).expect(200);
+  const cookie = login.headers['set-cookie'][0];
+  assert.match(cookie, /HttpOnly/i); assert.match(cookie, /SameSite=Lax/i);
+  if (oldCookie) assert.notEqual(cookie, oldCookie[0]);
+  await user.agent.get('/api/profiles/me').expect(200);
+  await user.agent.post('/api/auth/logout').set('X-CSRF-Token', login.body.csrfToken).expect(204);
+  await request(app).get('/api/profiles/me').set('Cookie', cookie.split(';')[0]).expect(401);
+});
+
+test('TF-04: anonymous access, missing CSRF, stale tokens and foreign origins are rejected', async () => {
+  await request(app).get('/api/profiles/me').expect(401);
+  const user = await visitor();
+  await user.agent.post('/api/auth/register').send({ email: newEmail(), password }).expect(403);
+  await user.agent.post('/api/auth/register').set('X-CSRF-Token', user.token).set('Origin', 'https://untrusted.example').send({ email: newEmail(), password }).expect(403);
+  const result = await user.agent.post('/api/auth/register').set('X-CSRF-Token', user.token).send({ email: newEmail(), password }).expect(201);
+  assert.notEqual(result.body.csrfToken, user.token);
+  await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(profileValues).expect(403);
+});
+
+test('SF-04 / TF-03: create/read/edit profile and restore it after a new login', async () => {
+  const user = await register();
+  assert.equal((await user.agent.get('/api/profiles/me')).body.profile, null);
+  const profile = await createProfile(user);
+  assert.equal(await PlayerProfile.countDocuments({ owner: user.id }), 1);
+  await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(profileValues).expect(409);
+  const updated = { ...profileValues, bio: 'Updated biography — لاعب تنافسي' };
+  const result = await user.agent.put(`/api/profiles/${profile.id}`).set('X-CSRF-Token', user.token).send(updated).expect(200);
+  assert.equal(result.body.profile.bio, updated.bio);
+  assert.ok(!JSON.stringify(result.body).includes(user.email));
+  await user.agent.post('/api/auth/logout').set('X-CSRF-Token', user.token).expect(204);
+  const fresh = await visitor();
+  await fresh.agent.post('/api/auth/login').set('X-CSRF-Token', fresh.token).send({ email: user.email, password }).expect(200);
+  assert.equal((await fresh.agent.get('/api/profiles/me')).body.profile.bio, updated.bio);
+});
+
+test('SF-04: required/overlong data and ownership mass assignment are rejected', async () => {
+  const user = await register();
+  for (const body of [{ ...profileValues, displayName: '' }, { ...profileValues, bio: 'x'.repeat(1001) }, { ...profileValues, languages: [] }, { ...profileValues, owner: new mongoose.Types.ObjectId().toString() }]) {
+    await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(body).expect(400);
+  }
+});
+
+test('SF-05 / SF-06: catalog-driven game create/edit/read/delete, duplicate prevention and option validation', async () => {
+  const user = await register(); const profile = await createProfile(user);
+  const catalog = await user.agent.get('/api/games').expect(200);
+  assert.equal(catalog.body.games.length, 1); assert.equal(catalog.body.games[0].name, 'Rocket League');
+  const path = `/api/profiles/${profile.id}/games`;
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details: { ...details, rank: 'Radiant' } }).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: new mongoose.Types.ObjectId().toString(), details }).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details }).expect(201);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).send({ gameId: game.id, details }).expect(409);
+  await user.agent.put(`${path}/${game.id}`).set('X-CSRF-Token', user.token).send({ details: { ...details, division: 'V' } }).expect(400);
+  const changed = { ...details, rank: 'Diamond III' };
+  await user.agent.put(`${path}/${game.id}`).set('X-CSRF-Token', user.token).send({ details: changed }).expect(200);
+  const result = await user.agent.get('/api/profiles/me');
+  assert.equal(result.body.sections[0].details.rank, 'Diamond III'); assert.equal(result.body.sections[0].gameId, game.id);
+  assert.equal(result.body.sections[0].source, 'self_reported');
+  await user.agent.delete(`${path}/${game.id}`).set('X-CSRF-Token', user.token).expect(204);
+  assert.equal((await user.agent.get('/api/profiles/me')).body.sections.length, 0);
+});
+
+test('TF-03: unique indexes protect email, player ownership and game sections at database level', async () => {
+  const user = await register(); const profile = await createProfile(user);
+  await assert.rejects(User.create({ email: user.email, passwordHash: 'not-a-real-password' }), error => error.code === 11000);
+  await assert.rejects(PlayerProfile.create({ ...profileValues, owner: user.id }), error => error.code === 11000);
+  const section = { profile: profile.id, game: game.id, schemaVersion: 1, details };
+  await PlayerGame.create(section);
+  await assert.rejects(PlayerGame.create(section), error => error.code === 11000);
+});
+
+test('SF-07: profile and header persist, can be read/replaced/removed, and originals are cleaned up', async () => {
+  const user = await register(); const profile = await createProfile(user);
+  for (const kind of ['profile', 'header']) {
+    const path = `/api/profiles/${profile.id}/images/${kind}`;
+    const uploaded = await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', image, { filename: 'player.png', contentType: 'image/png' }).expect(200);
+    assert.ok(uploaded.body.profile[`${kind}ImageUrl`]);
+    const fetched = await user.agent.get(path).expect(200);
+    assert.match(fetched.headers['content-type'], /image\/webp/);
+    const decoded = await sharp(fetched.body).metadata(); assert.equal(decoded.format, 'webp');
+    const count = (await readdir(config.uploadDir)).length;
+    await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', image, { filename: 'replacement.png', contentType: 'image/png' }).expect(200);
+    assert.equal((await readdir(config.uploadDir)).length, count);
+    await user.agent.delete(path).set('X-CSRF-Token', user.token).expect(200);
+    await user.agent.get(path).expect(404);
+  }
+});
+
+test('SF-07: malformed, disguised, unsupported, missing, oversized and excessive-pixel files are rejected', async () => {
+  const user = await register(); const profile = await createProfile(user);
+  const path = `/api/profiles/${profile.id}/images/profile`;
+  await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', Buffer.from('<svg><script>alert(1)</script></svg>'), { filename: 'fake.png', contentType: 'image/png' }).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', image, { filename: 'mismatch.jpg', contentType: 'image/jpeg' }).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', image, { filename: 'image.svg', contentType: 'image/svg+xml' }).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).expect(400);
+  await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', Buffer.alloc(5 * 1024 * 1024 + 1), { filename: 'large.png', contentType: 'image/png' }).expect(413);
+  const huge = await sharp({ create: { width: 5000, height: 5000, channels: 3, background: 'black' } }).png().toBuffer();
+  await user.agent.post(path).set('X-CSRF-Token', user.token).attach('image', huge, { filename: 'pixels.png', contentType: 'image/png' }).expect(400);
+});
+
+test('TF-04 / SF-04–07: User B cannot read or change User A profile, games, or images by changing IDs', async () => {
+  const a = await register(); const profile = await createProfile(a); const b = await register();
+  const path = `/api/profiles/${profile.id}`;
+  await a.agent.post(`${path}/games`).set('X-CSRF-Token', a.token).send({ gameId: game.id, details }).expect(201);
+  await a.agent.post(`${path}/images/profile`).set('X-CSRF-Token', a.token).attach('image', image, { filename: 'a.png', contentType: 'image/png' }).expect(200);
+  await b.agent.get(path).expect(404);
+  await b.agent.put(path).set('X-CSRF-Token', b.token).send({ ...profileValues, displayName: 'Hijacked' }).expect(404);
+  await b.agent.post(`${path}/games`).set('X-CSRF-Token', b.token).send({ gameId: game.id, details }).expect(404);
+  await b.agent.put(`${path}/games/${game.id}`).set('X-CSRF-Token', b.token).send({ details }).expect(404);
+  await b.agent.delete(`${path}/games/${game.id}`).set('X-CSRF-Token', b.token).expect(404);
+  for (const kind of ['profile', 'header']) {
+    await b.agent.get(`${path}/images/${kind}`).expect(404);
+    await b.agent.post(`${path}/images/${kind}`).set('X-CSRF-Token', b.token).attach('image', image, { filename: 'b.png', contentType: 'image/png' }).expect(404);
+    await b.agent.delete(`${path}/images/${kind}`).set('X-CSRF-Token', b.token).expect(404);
+  }
+  assert.equal((await a.agent.get(path)).body.profile.displayName, profileValues.displayName);
+  await b.agent.get('/api/profiles/not-an-id').expect(404);
+});
+
+test('TF-03 / SF-02 / SF-04–07: account, session, profile, game and both images survive MongoDB and app restart', { timeout: 60000 }, async () => {
+  const user = await register(); const profile = await createProfile(user);
+  const path = `/api/profiles/${profile.id}`;
+  await user.agent.post(`${path}/games`).set('X-CSRF-Token', user.token).send({ gameId: game.id, details }).expect(201);
+  for (const kind of ['profile', 'header']) await user.agent.post(`${path}/images/${kind}`).set('X-CSRF-Token', user.token).attach('image', image, { filename: 'persist.png', contentType: 'image/png' }).expect(200);
+  // Capture an actual authenticated cookie from a login, then rebuild the app and restart mongod.
+  const fresh = await visitor();
+  const login = await fresh.agent.post('/api/auth/login').set('X-CSRF-Token', fresh.token).send({ email: user.email, password }).expect(200);
+  const cookie = login.headers['set-cookie'][0].split(';')[0];
+  await request(app).get('/api/profiles/me').set('Cookie', cookie).expect(200);
+  const signedValue = decodeURIComponent(cookie.slice(cookie.indexOf('=') + 1));
+  const sessionId = signedValue.slice(2, signedValue.lastIndexOf('.'));
+  const savedSession = await mongoose.connection.db.collection('sessions').findOne({ _id: sessionId });
+  assert.ok(savedSession, 'The authenticated session must exist before restart');
+  assert.equal(JSON.parse(savedSession.session).userId, user.id);
+  assert.ok(savedSession.expires > new Date(), 'The session must not already be expired');
+  await app.locals.sessionStore.close(); await mongoose.disconnect();
+  await mongo.stop({ doCleanup: false, force: false });
+  await mongo.start(true);
+  config.mongoUri = mongo.getUri('rosterlink_integration');
+  await connectDatabase(config.mongoUri);
+  assert.ok(await User.exists({ _id: user.id }), 'User must remain on disk after restart');
+  assert.ok(await PlayerProfile.exists({ _id: profile.id }), 'Profile must remain on disk after restart');
+  assert.ok(await mongoose.connection.db.collection('sessions').countDocuments(), 'Sessions must remain on disk after restart');
+  const persistedSession = await mongoose.connection.db.collection('sessions').findOne({ _id: sessionId });
+  assert.ok(persistedSession, 'The specific login session must survive restart');
+  assert.ok(persistedSession.expires > new Date(), 'The specific login session must remain unexpired');
+  app = createApp(config);
+  const restoredSession = await new Promise((resolve, reject) => app.locals.sessionStore.get(sessionId, (error, value) => error ? reject(error) : resolve(value)));
+  assert.ok(restoredSession, 'The authenticated session must be readable after restart');
+  assert.equal(restoredSession.userId, user.id);
+  const result = await request(app).get('/api/profiles/me').set('Cookie', cookie).expect(200);
+  assert.equal(result.body.profile.displayName, profileValues.displayName);
+  assert.deepEqual(result.body.sections[0].details, details);
+  assert.ok(result.body.profile.profileImageUrl); assert.ok(result.body.profile.headerImageUrl);
+  for (const kind of ['profile', 'header']) await request(app).get(`${path}/images/${kind}`).set('Cookie', cookie).expect(200);
+});
