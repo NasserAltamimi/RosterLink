@@ -1,0 +1,31 @@
+let csrfToken;
+
+export class ApiError extends Error {
+  constructor(message, status, fields = {}) { super(message); this.status = status; this.fields = fields; }
+}
+
+export async function api(path, { method = 'GET', body } = {}) {
+  if (method !== 'GET' && !csrfToken) await api('/auth/session');
+  const headers = {};
+  if (method !== 'GET') headers['X-CSRF-Token'] = csrfToken || '';
+  if (body && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
+  let response;
+  try {
+    response = await fetch(`/api${path}`, { method, headers, credentials: 'same-origin',
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch { throw new ApiError('Cannot connect to RosterLink. Check your connection and try again.', 0); }
+  const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
+  if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event('session-expired'));
+    throw new ApiError(data.message || 'The request failed. Please try again.', response.status, data.fields);
+  }
+  if (data.csrfToken) csrfToken = data.csrfToken;
+  return data;
+}
+
+export async function endSession() {
+  await api('/auth/logout', { method: 'POST' });
+  csrfToken = undefined;
+}
