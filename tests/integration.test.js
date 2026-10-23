@@ -1,7 +1,7 @@
 import { before, after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readdir, rm } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { resolve, join, dirname } from 'node:path';
 import mongoose from 'mongoose';
 import request from 'supertest';
 import sharp from 'sharp';
@@ -39,7 +39,10 @@ after(async () => {
   await mongoose.disconnect();
   await mongo?.stop();
   // Only the uniquely generated test directory under this workspace is removed.
-  if (directory) await rm(directory, { recursive: true, force: true });
+  if (directory) {
+    assert.equal(dirname(directory), resolve('.local-data'), 'Cleanup must stay inside the workspace test-data root');
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 async function visitor() {
