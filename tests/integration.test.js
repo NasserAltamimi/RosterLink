@@ -317,7 +317,7 @@ test('SF-13: a shared profile link is readable without login, exposes only publi
   await request(app).get('/api/public/profiles/not-an-id').expect(404);
   await request(app).get(`/api/public/profiles/${new mongoose.Types.ObjectId()}`).expect(404);
   await request(app).get(path).expect(401);
-  await request(app).put(publicPath).send(profileValues).expect(404);
+  await request(app).put(publicPath).send(profileValues).expect(403);
 });
 
 test('TF-03 / SF-02 / SF-04–07: account, session, profile, game and both images survive MongoDB and app restart', { timeout: 60000 }, async () => {
