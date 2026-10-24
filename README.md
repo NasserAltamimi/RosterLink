@@ -58,9 +58,9 @@ Open http://127.0.0.1:3001. Production requires HTTPS, `NODE_ENV=production`, th
 ## Demonstrate Sprint 1
 
 1. Open a clean browser context and register with a valid email and a 12–128 character password. Registration signs you in.
-2. Enter a gaming name, bio, region/country, and comma-separated languages; create the profile.
+2. Enter a gaming name, bio and region/country, choose languages (Arabic, English, and/or Other with custom text), and create the profile. A green confirmation appears at the top right after each successful save.
 3. Open **Edit profile** and upload both a profile image and a header: JPEG/PNG/WebP, at most 5 MB and 20 megapixels each.
-4. Open **Game profiles**. Select any game, choose a platform and Play region (Other allows custom text), and enter communication languages and playing/tryout availability with a timezone. Rank is optional. Optionally search `EWC`, select a competition edition, then choose a result or enter one manually. Participation and results remain self-reported. Save and reload.
+4. Open **Game profiles**. Select any game, choose a platform and Play region (Other allows custom text), choose communication languages (Arabic / English / Other) for that game and enter playing/tryout availability with a timezone. Rank is optional. Optionally search `EWC`, select a competition edition, then choose a result or enter one manually. Participation and results remain self-reported. Save and reload.
 5. View the overview, reload, edit a value, log out, and log in again. Confirm saved details and both images return.
 6. Create a second account in a separate browser context. The first account's profile/game/image IDs cannot be read or modified using this session. Automated tests reproduce the attack requests.
 7. Try an invalid login, duplicate email, invalid image, and failed connection. Check useful errors and preserved form edits.

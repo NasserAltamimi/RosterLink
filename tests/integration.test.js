@@ -16,7 +16,7 @@ import { syncPandaScoreGames } from '../server/modules/games/pandascore.js';
 import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from './fixtures/competition-provider.js';
 
-const details = { platform: 'PC', rank: 'Champion II', server: 'Middle East', language: 'Arabic / English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh; tryouts Fri' };
+const details = { platform: 'PC', rank: 'Champion II', server: 'Middle East', language: 'Arabic, English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh; tryouts Fri' };
 const profileValues = { displayName: 'PilotPlayer', bio: 'Ready to learn and compete.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] };
 const password = 'A long demo passphrase 2026!';
 let mongo, app, directory, config, game, image;
@@ -158,6 +158,34 @@ test('SF-04: required/overlong data and ownership mass assignment are rejected',
   for (const body of [{ ...profileValues, displayName: '' }, { ...profileValues, bio: 'x'.repeat(1001) }, { ...profileValues, languages: [] }, { ...profileValues, owner: new mongoose.Types.ObjectId().toString() }]) {
     await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(body).expect(400);
   }
+});
+
+test('SF-04 / SF-06 / SF-13: profile and per-game languages are trimmed, de-duplicated, independent and public', async () => {
+  const user = await register(); const profile = await createProfile(user);
+  const path = `/api/profiles/${profile.id}`;
+  const saved = await user.agent.put(path).set('X-CSRF-Token', user.token).send({ ...profileValues, languages: [' english ', 'Arabic', 'Urdu', 'urdu', ' French '] }).expect(200);
+  assert.deepEqual(saved.body.profile.languages, ['English', 'Arabic', 'Urdu', 'French']);
+  for (const languages of [[], ['  '], ['x'.repeat(41)], Array.from({ length: 9 }, (_, index) => `Language ${index}`), 'Arabic']) {
+    await user.agent.put(path).set('X-CSRF-Token', user.token).send({ ...profileValues, languages }).expect(400);
+  }
+  const other = await Game.create({ slug: 'languages-second-game', providerId: 27, name: 'Second language game', enabled: true, schemaVersion: 2, fields: [] });
+  await user.agent.post(`${path}/games`).set('X-CSRF-Token', user.token).send({ gameId: game.id, details: { ...details, language: 'Arabic / English' } }).expect(201);
+  await user.agent.post(`${path}/games`).set('X-CSRF-Token', user.token).send({ gameId: other.id, details: { ...details, language: ' English, tagalog, Tagalog ' } }).expect(201);
+  for (const language of ['', ' , ', 'x'.repeat(121)]) {
+    const rejected = await user.agent.put(`${path}/games/${other.id}`).set('X-CSRF-Token', user.token).send({ details: { ...details, language } }).expect(400);
+    assert.ok(rejected.body.fields['details.language']);
+  }
+  const me = (await user.agent.get('/api/profiles/me')).body;
+  assert.deepEqual(me.profile.languages, ['English', 'Arabic', 'Urdu', 'French']);
+  assert.equal(me.sections.find(item => item.gameId === game.id).details.language, 'Arabic, English');
+  assert.equal(me.sections.find(item => item.gameId === other.id).details.language, 'English, tagalog');
+  // Saving a game never changes the general profile languages, and vice versa.
+  await user.agent.put(path).set('X-CSRF-Token', user.token).send({ ...profileValues, languages: ['Arabic'] }).expect(200);
+  const shared = (await request(app).get(`/api/public/profiles/${profile.id}`).expect(200)).body;
+  assert.deepEqual(shared.profile.languages, ['Arabic']);
+  assert.equal(shared.sections.find(item => item.gameId === game.id).details.language, 'Arabic, English');
+  assert.equal(shared.sections.find(item => item.gameId === other.id).details.language, 'English, tagalog');
+  await PlayerGame.deleteMany({ game: other._id }); await Game.deleteOne({ _id: other._id });
 });
 
 test('SF-05 / SF-06: shared game create/edit/read/delete, duplicate prevention and required field validation', async () => {
