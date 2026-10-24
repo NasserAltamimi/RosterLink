@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { resolve, join, dirname } from 'node:path';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
@@ -22,7 +22,14 @@ await Game.create({ slug: 'local-valorant', providerId: 26, name: 'Valorant', en
 await Game.create({ slug: 'local-mobile-legends', providerId: 34, name: 'Mobile Legends: Bang Bang', enabled: true, schemaVersion: 2, fields: [] });
 // Deterministic provider fixtures; browser tests never spend provider quota or use a real token.
 const tournamentSearch = createTournamentSearch({ token: 'browser-tests-only', fetchImpl: fixtureFetch });
-const app = createApp({ mongoUri, sessionSecret: 'browser-tests-only-secret-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5174', tournamentSearch });
+// Test-process injection only: capture mail in ignored artifacts, never expose an inbox API.
+const mailbox = resolve('.local-data/e2e-reset-mailbox');
+await mkdir(mailbox, { recursive: true });
+const resetMailer = async message => {
+  if (!/^recovery-[a-z0-9-]+@example\.com$/.test(message.email)) return;
+  await writeFile(join(mailbox, `${message.email}.json`), JSON.stringify(message), { mode: 0o600 });
+};
+const app = createApp({ mongoUri, sessionSecret: 'browser-tests-only-secret-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5174', tournamentSearch, resetMailer });
 const server = app.listen(3002, '127.0.0.1', () => console.log('Browser test API ready. Uses an isolated real MongoDB database.'));
 const stop = () => server.close(async () => {
   await app.locals.sessionStore.close(); await mongoose.disconnect(); await mongo.stop();

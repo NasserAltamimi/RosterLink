@@ -16,6 +16,8 @@ Profile DTOs omit account email, hash, owner ID, and storage keys. No public pro
 
 ## Validation
 
+SF-03 adds hidden `User.resetTokens` (at most five SHA-256 hashes with expiration), a sparse `resetTokens.hash` index, and `User.sessionVersion` (default zero). Reset atomically changes the password, clears tokens and increments the version. Existing accounts and sessions need no destructive migration. Details: [password recovery](password-recovery.md).
+
 Zod checks types, required values, lengths, and unknown keys. Mongoose adds persistence constraints. Unique database indexes prevent races; checking for an existing email alone is insufficient. Duplicate-key errors map to safe 409 responses.
 
 The browser and backend consume field definitions from MongoDB. Backend game validation rejects unknown fields/options, checks required values/lengths, and omits division for Unranked/Supersonic Legend. Cross-document catalog validation is in the backend validator; a Mongoose Map alone cannot enforce these options. Direct administrative writes must use equivalent validation or a reviewed migration. Catalog schema changes must consider saved section schemaVersion values.
