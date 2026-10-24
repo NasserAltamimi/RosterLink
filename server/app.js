@@ -8,6 +8,7 @@ import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { authRoutes, csrfProtection } from './modules/auth/routes.js';
 import { profileRoutes } from './modules/profiles/routes.js';
+import { publicProfileRoutes } from './modules/profiles/public.js';
 import { Game } from './modules/games/model.js';
 import { localImageStorage } from './storage/local-images.js';
 import { HttpError, handleError } from './lib/errors.js';
@@ -44,7 +45,9 @@ export function createApp({ mongoUri, sessionSecret, uploadDir, origin, producti
   app.use('/api/auth', authRoutes({ secureCookies: production }));
   app.get('/api/games', async (req, res) => res.json({ games: (await Game.find({ enabled: true }).select('-__v').lean()).map(game => ({ ...game, fields: gameFields, schemaVersion: 2, description: 'Add your platform, play region, communication languages, and availability.' })) }));
   app.use('/api/games', tournamentRoutes(tournamentSearch || createTournamentSearch({ token: pandaScoreToken })));
-  app.use('/api/profiles', profileRoutes(localImageStorage(uploadDir)));
+  const imageStorage = localImageStorage(uploadDir);
+  app.use('/api/profiles', profileRoutes(imageStorage));
+  app.use('/api/public/profiles', publicProfileRoutes(imageStorage));
   app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found.' }));
   const dist = resolve('dist');
   if (existsSync(dist)) {

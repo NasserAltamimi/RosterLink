@@ -9,12 +9,19 @@ import { LegacyDetails } from './Experience.jsx';
 import { gameFields } from '../shared/game-form.js';
 
 function Overview({ profile, sections, games, navigate }) {
+  const [linkStatus, setLinkStatus] = useState(null);
+  async function copyLink() {
+    const link = `${location.origin}/p/${profile.id}`;
+    try { await navigator.clipboard.writeText(link); setLinkStatus('Public link copied.'); }
+    catch { setLinkStatus(`Copy this link: ${link}`); }
+  }
   return <>
     <a className="skip-link" href="#main-content">Skip to content</a>
     <section className="card player-card">
       <div className="player-cover">{profile.headerImageUrl ? <img src={profile.headerImageUrl} alt="Your player header" /> : <><span className="cover-word" aria-hidden="true">NEXT UP.</span><span className="cover-mark" aria-hidden="true">↗</span></>}</div>
       <div className="player-info"><div className="avatar">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="Your player avatar" /> : <span>{profile.displayName.slice(0, 2).toUpperCase()}</span>}</div>
-        <div className="player-heading"><div><p className="eyebrow">PLAYER PROFILE</p><h2 dir="auto">{profile.displayName}</h2><p className="muted" dir="auto">{profile.region} <span aria-hidden="true">·</span> {profile.languages.join(' / ')}</p></div><button className="button secondary" onClick={() => navigate('edit')}>Edit profile <span aria-hidden="true">↗</span></button></div>
+        <div className="player-heading"><div><p className="eyebrow">PLAYER PROFILE</p><h2 dir="auto">{profile.displayName}</h2><p className="muted" dir="auto">{profile.region} <span aria-hidden="true">·</span> {profile.languages.join(' / ')}</p></div><div className="heading-actions"><button className="button secondary" onClick={copyLink}>Copy public link</button><button className="button secondary" onClick={() => navigate('edit')}>Edit profile <span aria-hidden="true">↗</span></button></div></div>
+        {linkStatus && <Notice>{linkStatus}</Notice>}
         <div className="player-bio"><h3>About</h3><p dir="auto">{profile.bio || 'Tell future teammates about your play style and goals. Add a bio to make this space yours.'}</p></div>
       </div>
     </section>

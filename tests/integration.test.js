@@ -299,6 +299,27 @@ test('TF-04 / SF-04–07: User B cannot read or change User A profile, games, or
   await b.agent.get('/api/profiles/not-an-id').expect(404);
 });
 
+test('SF-13: a shared profile link is readable without login, exposes only public fields, and writes stay private', async () => {
+  const owner = await register(); const profile = await createProfile(owner);
+  const path = `/api/profiles/${profile.id}`;
+  await owner.agent.post(`${path}/games`).set('X-CSRF-Token', owner.token).send({ gameId: game.id, details }).expect(201);
+  await owner.agent.post(`${path}/images/profile`).set('X-CSRF-Token', owner.token).attach('image', image, { filename: 'a.png', contentType: 'image/png' }).expect(200);
+  const publicPath = `/api/public/profiles/${profile.id}`;
+  const shared = await request(app).get(publicPath).expect(200);
+  assert.equal(shared.body.profile.displayName, profileValues.displayName);
+  assert.equal(shared.body.sections[0].details.platform, 'PC');
+  assert.deepEqual(Object.keys(shared.body.profile).sort(), ['bio', 'displayName', 'headerImageUrl', 'id', 'languages', 'profileImageUrl', 'region']);
+  const serialized = JSON.stringify(shared.body);
+  for (const secret of [owner.email, owner.id, 'owner', 'legacyDetails', 'passwordHash']) assert.ok(!serialized.includes(secret), `${secret} must not be public`);
+  assert.match((await request(app).get(shared.body.profile.profileImageUrl).expect(200)).headers['content-type'], /image\/webp/);
+  await request(app).get(`${publicPath}/images/header`).expect(404);
+  await request(app).get(`${publicPath}/images/other`).expect(404);
+  await request(app).get('/api/public/profiles/not-an-id').expect(404);
+  await request(app).get(`/api/public/profiles/${new mongoose.Types.ObjectId()}`).expect(404);
+  await request(app).get(path).expect(401);
+  await request(app).put(publicPath).send(profileValues).expect(403);
+});
+
 test('TF-03 / SF-02 / SF-04–07: account, session, profile, game and both images survive MongoDB and app restart', { timeout: 60000 }, async () => {
   const user = await register(); const profile = await createProfile(user);
   const path = `/api/profiles/${profile.id}`;
