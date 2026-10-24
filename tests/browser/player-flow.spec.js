@@ -56,7 +56,7 @@ test('SF-01–07: real player journey with profile, game, both images, reload an
   for (const alt of ['Your player avatar', 'Your player header']) {
     const image = page.getByAltText(alt);
     await expect(image).toBeVisible();
-    expect(await image.evaluate(image => image.complete && image.naturalWidth > 0)).toBeTruthy();
+    await expect.poll(() => image.evaluate(image => image.complete && image.naturalWidth > 0)).toBe(true);
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
   await page.screenshot({ path: testInfo.outputPath('player-overview.png'), fullPage: true });
