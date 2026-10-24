@@ -14,8 +14,9 @@ import { localImageStorage } from './storage/local-images.js';
 import { HttpError, handleError } from './lib/errors.js';
 import { createTournamentSearch, tournamentRoutes } from './modules/games/tournaments.js';
 import { gameFields } from '../shared/game-form.js';
+import { createResetMailer } from './mail/smtp.js';
 
-export function createApp({ mongoUri, sessionSecret, uploadDir, origin, production = false, trustProxy = false, pandaScoreToken, tournamentSearch }) {
+export function createApp({ mongoUri, sessionSecret, uploadDir, origin, production = false, trustProxy = false, pandaScoreToken, tournamentSearch, smtp, resetMailer = createResetMailer(smtp) }) {
   const app = express();
   app.disable('x-powered-by');
   if (trustProxy) app.set('trust proxy', 1);
@@ -42,7 +43,7 @@ export function createApp({ mongoUri, sessionSecret, uploadDir, origin, producti
     cookie: { httpOnly: true, secure: production, sameSite: 'lax', maxAge: 7 * 24 * 60 * 60 * 1000, path: '/' },
   }));
   app.use('/api', csrfProtection);
-  app.use('/api/auth', authRoutes({ secureCookies: production }));
+  app.use('/api/auth', authRoutes({ secureCookies: production, origin, resetMailer }));
   app.get('/api/games', async (req, res) => res.json({ games: (await Game.find({ enabled: true }).select('-__v').lean()).map(game => ({ ...game, fields: gameFields, schemaVersion: 2, description: 'Add your platform, play region, communication languages, and availability.' })) }));
   app.use('/api/games', tournamentRoutes(tournamentSearch || createTournamentSearch({ token: pandaScoreToken })));
   const imageStorage = localImageStorage(uploadDir);

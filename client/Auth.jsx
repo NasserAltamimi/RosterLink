@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { api } from './api.js';
 import { Field, Notice, Brand } from './components.jsx';
 
-export default function Auth({ onAuthenticated }) {
-  const [mode, setMode] = useState('register');
+export default function Auth({ onAuthenticated, children }) {
+  const [mode, setMode] = useState(location.pathname === '/login' ? 'login' : 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -28,17 +28,21 @@ export default function Auth({ onAuthenticated }) {
     </section>
     <section className="auth-panel">
       <div className="auth-card">
+        {children || <>
         <p className="eyebrow">WELCOME TO ROSTERLINK</p>
         <h2>{register ? 'Make your first move.' : 'Good to have you back.'}</h2>
         <p className="muted">{register ? 'Start with your profile. No competitive record required.' : 'Log in to continue building your player profile.'}</p>
         <div className="auth-tabs" aria-label="Account access"><button type="button" aria-pressed={register} onClick={() => changeMode('register')} disabled={busy}>Create account</button><button type="button" aria-pressed={!register} onClick={() => changeMode('login')} disabled={busy}>Log in</button></div>
         <form onSubmit={submit}>
+          {location.search === '?passwordReset=success' && <Notice>Your password has been reset. Log in with your new password.</Notice>}
           <Notice error={error} />
           <Field label="Email address" name="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} error={error?.fields?.email} placeholder="you@example.com" />
           <Field label="Password" name="password" type="password" autoComplete={register ? 'new-password' : 'current-password'} required minLength={register ? 12 : 1} maxLength={128} value={password} onChange={e => setPassword(e.target.value)} error={error?.fields?.password} help={register ? 'Use 12–128 characters. A memorable passphrase works well.' : undefined} />
           <button className="button primary full" disabled={busy} type="submit">{busy ? 'Please wait…' : register ? 'Create your account' : 'Log in'}<span aria-hidden="true">↗</span></button>
         </form>
+        {!register && <p><a className="text-button" href="/forgot-password">Forgot password?</a></p>}
         <p className="auth-note">Your profile starts with information you provide.<br />An external account or verified status is not required.</p>
+        </>}
       </div>
     </section>
   </main>;

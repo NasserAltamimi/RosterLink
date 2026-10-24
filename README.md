@@ -2,7 +2,7 @@
 
 A responsive esports player platform for SWE 444 at King Saud University. The wider workflow is **player profile → team opening → application → review → tryout → decision**.
 
-This branch implements accounts, secure sessions, manual player profiles, a MongoDB-backed game catalog, separate game sections, persistent profile/header images, and PandaScore competition metadata lookup. All selectable games share one form, with self-reported rank and competition results. Organization management, recruitment, password recovery, notifications, verification, social features, and player-account integration remain later work.
+This branch implements accounts, secure sessions, password recovery, manual player profiles, a MongoDB-backed game catalog, separate game sections, persistent profile/header images, and PandaScore competition metadata lookup. All selectable games share one form, with self-reported rank and competition results. Organization management, recruitment, notifications, verification, social features, and player-account integration remain later work.
 
 ## Run locally
 
@@ -34,6 +34,8 @@ npm run dev
 Open **http://127.0.0.1:5173**. Vite proxies `/api` to Express at `127.0.0.1:3001`. Use `127.0.0.1` consistently rather than mixing it with `localhost`. Stop with Ctrl+C. Restarting retains development accounts, sessions, profiles, game sections, and images. The seed only configures Rocket League; it creates no demo users or fabricated provider data.
 
 ## Build and verify
+
+Password recovery (SF-03) uses server-only Gmail SMTP from **rosterlink0@gmail.com**. Configure either `GMAIL_APP_PASSWORD` or all three `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, and `GMAIL_REFRESH_TOKEN` in ignored `.env`, then restart the API. Keep `APP_ORIGIN` set to the actual browser origin. Missing mail credentials show an unavailable message; a sender address alone cannot authenticate Gmail. See [setup, security behavior, and verification](docs/password-recovery.md).
 
 ```powershell
 npm test

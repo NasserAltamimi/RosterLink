@@ -14,6 +14,8 @@ Passwords use asynchronous Node scrypt: random 16-byte salt, N=32768, r=8, p=1, 
 
 ## API contract
 
+SF-03 adds forgotten-password requests and single-use resets, hashed expiring tokens, and account-version revocation of every prior session. See [password recovery](password-recovery.md) for the API, atomic-write design, Gmail configuration, and delivery/rate-limit boundaries.
+
 JSON bodies except multipart image uploads. Errors: `{message,fields?}`. Another owner's profile ID returns 404. Profile and image routes are private in Sprint 1.
 
 | Method | Endpoint | Purpose |

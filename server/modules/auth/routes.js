@@ -5,8 +5,9 @@ import { rateLimit } from 'express-rate-limit';
 import { User } from './model.js';
 import { hashPassword, verifyPassword } from './passwords.js';
 import { HttpError, parse } from '../../lib/errors.js';
+import { passwordResetRoutes } from './reset.js';
 
-const credentials = z.object({
+export const credentials = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address.').max(254),
   password: z.string().min(12, 'Use at least 12 characters.').max(128, 'Use at most 128 characters.'),
 }).strict();
@@ -30,17 +31,18 @@ export function csrfProtection(req, res, next) {
 export async function requireUser(req, res, next) {
   if (!req.session.userId) throw new HttpError(401, 'Please log in to continue.');
   const user = await User.findOne({ _id: req.session.userId, status: 'active' });
-  if (!user) throw new HttpError(401, 'Please log in to continue.');
+  if (!user || (req.session.sessionVersion ?? 0) !== user.sessionVersion) throw new HttpError(401, 'Please log in to continue.');
   req.user = user;
   next();
 }
 
-export function authRoutes({ secureCookies = false } = {}) {
+export function authRoutes({ secureCookies = false, origin, resetMailer } = {}) {
   const router = Router();
   const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-8', legacyHeaders: false,
     message: { message: 'Too many attempts. Please try again in 15 minutes.' } });
   router.get('/session', async (req, res) => {
-    const user = req.session.userId ? await User.findOne({ _id: req.session.userId, status: 'active' }) : null;
+    let user = req.session.userId ? await User.findOne({ _id: req.session.userId, status: 'active' }) : null;
+    if (user && (req.session.sessionVersion ?? 0) !== user.sessionVersion) user = null;
     const token = csrfToken(req);
     await saveSession(req);
     res.json({ user: user ? safeUser(user) : null, csrfToken: token });
@@ -48,6 +50,7 @@ export function authRoutes({ secureCookies = false } = {}) {
   const authenticate = async (req, user, res, status = 200) => {
     await regenerate(req);
     req.session.userId = user.id;
+    req.session.sessionVersion = user.sessionVersion;
     const token = csrfToken(req);
     await saveSession(req);
     res.status(status).json({ user: safeUser(user), csrfToken: token });
@@ -72,5 +75,6 @@ export function authRoutes({ secureCookies = false } = {}) {
     res.clearCookie('rosterlink.sid', { path: '/', httpOnly: true, sameSite: 'lax', secure: secureCookies });
     res.status(204).end();
   });
+  router.use(passwordResetRoutes({ origin, resetMailer, credentials }));
   return router;
 }
