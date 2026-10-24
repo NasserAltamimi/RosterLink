@@ -62,3 +62,11 @@ Limits per 15 minutes: reset requests 10 per IP and 5 per normalized email (hash
 - Publication checks: `npm run check` (38 passing backend/domain tests and a successful production build); `npm run test:e2e` (16 passing desktop/mobile browser tests). Both commands were rerun successfully before publishing this branch.
 
 No mailbox contents, recipient addresses, credentials, reset links, tokens, or local data are included as published evidence. This change does not claim deployment or a completed teammate acceptance review.
+
+### Integration with the language-picker and toast UI
+
+PR #5 was blocked by merge conflicts after main incorporated PR #4 (`1eb0b3d`). The conflicts were in `client/Auth.jsx` and `client/main.jsx`. Merging main into the existing SF-03 branch preserves the teammate's language pickers, toast provider and successful-login/registration notifications alongside recovery routing, shared account layout, login selection, password-reset confirmation and fragment scrubbing.
+
+Recovery browser assertions now scope inline status messages to the account card, separately from the toast live region, and explicitly check registration and replacement-password login toasts. The integration was reviewed against current main to confirm that the teammate's other files remain intact and the PR still contains only SF-03 changes. The final staged diff passed whitespace and local-secret checks; ignored environment values and local data are excluded.
+
+Integration validation passed: `npm run check` (44 backend/domain tests and the production build) and `npm run test:e2e` (20 desktop/mobile browser tests). The browser suite includes recovery, same-tab reset-link handling, language-picker persistence and validation, and success-toast behavior. Desktop recovery and mobile new-password screenshots were visually reviewed. Real Gmail manual acceptance remains limited to the owner confirmation above; this integration check used isolated test databases and captured test email.

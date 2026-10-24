@@ -7,13 +7,15 @@ import { PlayerProfile, PlayerGame } from './model.js';
 import { Game } from '../games/model.js';
 import { sharedDetailsInput, experienceInput } from '../games/player-form.js';
 import { sharedDetails } from '../../../shared/game-form.js';
+import { normalizeLanguages, profileLanguageLimits } from '../../../shared/languages.js';
 import { HttpError, parse } from '../../lib/errors.js';
 
 const profileInput = z.object({
   displayName: z.string().trim().min(2, 'Enter at least 2 characters.').max(50),
   bio: z.string().trim().max(1000),
   region: z.string().trim().min(1, 'Enter your region.').max(80),
-  languages: z.array(z.string().trim().min(1).max(40)).min(1, 'Enter at least one language.').max(8).transform(values => [...new Set(values)]),
+  // Trimmed, Arabic/English canonicalized and de-duplicated case-insensitively (SF-04).
+  languages: z.array(z.string().trim().min(1).max(profileLanguageLimits.maxItemLength, `Keep each language to ${profileLanguageLimits.maxItemLength} characters or fewer.`)).min(1, 'Choose at least one language.').max(profileLanguageLimits.maxItems, `Choose up to ${profileLanguageLimits.maxItems} languages.`).transform(normalizeLanguages),
 }).strict();
 const gameInput = z.object({ gameId: z.string().regex(/^[a-f0-9]{24}$/i), details: sharedDetailsInput, experience: experienceInput.optional() }).strict();
 const gameUpdate = gameInput.omit({ gameId: true });

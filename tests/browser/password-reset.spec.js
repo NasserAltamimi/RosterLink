@@ -13,6 +13,7 @@ test('SF-03: request email, reset once, and log in with the new password', async
     await page.getByLabel('Password', { exact: false }).fill(password);
     await page.getByRole('button', { name: 'Create your account' }).click();
     await expect(page.getByRole('heading', { name: 'Your journey starts here.' })).toBeVisible();
+    await expect(page.locator('.toast-region')).toContainText('Account created.');
     await page.getByRole('button', { name: 'Log out', exact: true }).click();
     await page.getByRole('button', { name: 'Log in', exact: true }).first().click();
     await page.getByRole('link', { name: 'Forgot password?' }).click();
@@ -20,7 +21,7 @@ test('SF-03: request email, reset once, and log in with the new password', async
     await page.screenshot({ path: testInfo.outputPath('forgot-password.png'), fullPage: true });
     await page.getByLabel('Email address').fill(email);
     await page.getByRole('button', { name: 'Send reset link' }).click();
-    await expect(page.getByRole('status')).toContainText('If an active account exists');
+    await expect(page.locator('.auth-card').getByRole('status')).toContainText('If an active account exists');
     let mail;
     await expect.poll(async () => {
       try { mail = JSON.parse(await readFile(file, 'utf8')); return true; } catch { return false; }
@@ -36,11 +37,12 @@ test('SF-03: request email, reset once, and log in with the new password', async
     await page.screenshot({ path: testInfo.outputPath('new-password.png'), fullPage: true });
     await page.getByRole('button', { name: 'Reset password', exact: true }).click();
     await expect(page).toHaveURL(/\/login\?passwordReset=success$/);
-    await expect(page.getByRole('status')).toContainText('Log in with your new password.');
+    await expect(page.locator('.auth-card').getByRole('status')).toContainText('Log in with your new password.');
     await page.getByLabel('Email address').fill(email);
     await page.getByLabel('Password', { exact: false }).fill(replacement);
     await page.getByRole('button', { name: 'Log in', exact: true }).last().click();
     await expect(page.getByRole('heading', { name: 'Your journey starts here.' })).toBeVisible();
+    await expect(page.locator('.toast-region')).toContainText('Logged in successfully.');
     await page.goto(mail.link);
     await expect(page.getByRole('alert')).toContainText('invalid or has already been used');
     await expect(page.getByRole('link', { name: 'Request a new reset link' })).toBeVisible();
@@ -58,7 +60,7 @@ test('SF-03: invalid, expired, checking, sending and delivery-unavailable states
     await route.fulfill({ status: 410, json: { message: 'This reset link has expired. Request a new link.' } });
   });
   await page.goto(`/reset-password#${'1'.repeat(64)}`);
-  await expect(page.getByRole('status')).toContainText('Checking your reset link');
+  await expect(page.locator('.auth-card').getByRole('status')).toContainText('Checking your reset link');
   release();
   await expect(page.getByRole('alert')).toContainText('expired');
   await page.getByRole('link', { name: 'Request a new reset link' }).click();
@@ -76,5 +78,5 @@ test('SF-03: invalid, expired, checking, sending and delivery-unavailable states
   await expect(page.getByLabel('Email address')).toHaveValue('unknown@example.com');
   await page.unroute('**/api/auth/forgot-password');
   await page.getByRole('button', { name: 'Send reset link' }).click();
-  await expect(page.getByRole('status')).toContainText('If an active account exists');
+  await expect(page.locator('.auth-card').getByRole('status')).toContainText('If an active account exists');
 });

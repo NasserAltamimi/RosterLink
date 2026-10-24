@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { api } from './api.js';
 import { Field, Notice, Brand } from './components.jsx';
+import { useToast } from './Toasts.jsx';
 
 export default function Auth({ onAuthenticated, children }) {
+  const notify = useToast();
   const [mode, setMode] = useState(location.pathname === '/login' ? 'login' : 'register');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,7 +13,12 @@ export default function Auth({ onAuthenticated, children }) {
   const register = mode === 'register';
   async function submit(event) {
     event.preventDefault(); setError(null); setBusy(true);
-    try { const result = await api(`/auth/${mode}`, { method: 'POST', body: { email, password } }); await onAuthenticated(result.user); }
+    try {
+      const result = await api(`/auth/${mode}`, { method: 'POST', body: { email, password } });
+      // The account exists / the session is active once the API succeeds, even if loading the profile later fails.
+      notify(register ? 'Account created.' : 'Logged in successfully.');
+      await onAuthenticated(result.user);
+    }
     catch (error) { setError(error); }
     finally { setBusy(false); }
   }
