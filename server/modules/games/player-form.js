@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { platforms } from '../../../shared/game-form.js';
-import { formatLanguageText, parseLanguageText, gameLanguageLimits } from '../../../shared/languages.js';
+import { formatGameLanguageText, parseLanguageText, gameLanguageLimits } from '../../../shared/languages.js';
 
 const text = (max) => z.string().trim().min(1, 'This field is required.').max(max);
 export const sharedDetailsInput = z.object({
   platform: z.enum(platforms, { error: 'Choose a platform.' }),
   server: text(80), availability: text(300),
-  // Stored as one string (existing format); trimmed and de-duplicated before the 120-character limit (SF-06).
-  language: z.string().max(1000).transform(value => formatLanguageText(parseLanguageText(value)))
+  // Normalize where it fits; preserve valid compact legacy text rather than expanding it past 120.
+  language: z.string().max(1000).transform(value => formatGameLanguageText(parseLanguageText(value), value))
     .pipe(z.string().min(1, 'Choose at least one language.').max(gameLanguageLimits.maxTotalLength, `Keep these languages to ${gameLanguageLimits.maxTotalLength} characters in total.`)),
   rank: z.string().trim().max(100).optional().default(''),
 }).strict();

@@ -155,3 +155,25 @@ test('SF-03: Gmail adapter uses encrypted authenticated SMTP and the fixed sende
     else assert.equal(options.auth.pass, config.appPassword);
   }
 });
+
+test('SF-03 regression: recovery API and Gmail adapter complete a reset using a mock transport only', async () => {
+  const sent = [];
+  const adapter = createResetMailer({ appPassword: 'synthetic-transport-only' }, options => {
+    assert.equal(options.logger, false); assert.equal(options.debug, false);
+    return { sendMail: async message => { sent.push(message); } };
+  });
+  const application = makeApp({ resetMailer: adapter });
+  const client = await visitor(application);
+  const email = 'adapter-integration@example.invalid';
+  await account(email);
+  await post(client, 'forgot-password', { email }).expect(202);
+  for (let i = 0; sent.length === 0 && i < 100; i++) await new Promise(resolve => setTimeout(resolve, 10));
+  assert.equal(sent.length, 1); assert.equal(sent[0].to, email);
+  const link = new URL(sent[0].text.match(/Choose a new password: (\S+)/)[1]);
+  assert.equal(link.origin, origin); assert.equal(link.pathname, '/reset-password');
+  const token = link.hash.slice(1);
+  await post(client, 'reset-password/validate', { token }).expect(200);
+  await post(client, 'reset-password', { token, password: newPassword, confirmPassword: newPassword }).expect(200);
+  await post(client, 'login', { email, password: oldPassword }).expect(401);
+  await post(client, 'login', { email, password: newPassword }).expect(200);
+});
