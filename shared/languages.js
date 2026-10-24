@@ -32,6 +32,18 @@ export function normalizeLanguages(values = []) {
 export const parseLanguageText = text => normalizeLanguages(typeof text === 'string' ? text.split(separators) : []);
 export const formatLanguageText = values => normalizeLanguages(values).join(', ');
 
+/** Keep an unchanged, valid compact legacy list when adding separator spaces would overflow. */
+export function formatGameLanguageText(values, originalText = '') {
+  const languages = normalizeLanguages(values);
+  const formatted = formatLanguageText(languages);
+  const original = typeof originalText === 'string' ? originalText.trim() : '';
+  if (formatted.length <= gameLanguageLimits.maxTotalLength || !original || original.length > gameLanguageLimits.maxTotalLength) return formatted;
+  const keys = items => items.map(item => item.toLocaleLowerCase()).sort();
+  const previous = keys(parseLanguageText(original));
+  const current = keys(languages);
+  return previous.length === current.length && previous.every((value, index) => value === current[index]) ? original : formatted;
+}
+
 /** Restores picker selections from saved languages, keeping every custom language. */
 export function toLanguageSelection(values = []) {
   const languages = normalizeLanguages(values);
@@ -49,13 +61,13 @@ export function fromLanguageSelection({ selected = [], other = false, custom = '
 }
 
 /** Returns a user-facing error message, or null when the selection can be saved. */
-export function validateLanguageSelection(selection, { maxItems, maxItemLength, maxTotalLength } = {}) {
+export function validateLanguageSelection(selection, { maxItems, maxItemLength, maxTotalLength, originalText } = {}) {
   const custom = parseLanguageText(selection?.custom);
   if (selection?.other && !custom.length) return 'Enter the other language, or clear Other.';
   const languages = fromLanguageSelection(selection);
   if (!languages.length) return 'Choose at least one language.';
   if (maxItems && languages.length > maxItems) return `Choose up to ${maxItems} languages.`;
   if (maxItemLength && languages.some(language => language.length > maxItemLength)) return `Keep each language to ${maxItemLength} characters or fewer.`;
-  if (maxTotalLength && formatLanguageText(languages).length > maxTotalLength) return `Keep these languages to ${maxTotalLength} characters in total.`;
+  if (maxTotalLength && formatGameLanguageText(languages, originalText).length > maxTotalLength) return `Keep these languages to ${maxTotalLength} characters in total.`;
   return null;
 }

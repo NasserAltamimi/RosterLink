@@ -5,7 +5,7 @@ import Experience, { LegacyDetails } from './Experience.jsx';
 import LanguagePicker from './LanguagePicker.jsx';
 import { useToast } from './Toasts.jsx';
 import { gameFields, sharedDetails, playRegions } from '../shared/game-form.js';
-import { formatLanguageText, fromLanguageSelection, gameLanguageLimits, parseLanguageText, toLanguageSelection, validateLanguageSelection } from '../shared/languages.js';
+import { formatGameLanguageText, fromLanguageSelection, gameLanguageLimits, parseLanguageText, toLanguageSelection, validateLanguageSelection } from '../shared/languages.js';
 
 function GameIcon({ game }) {
   const [failed, setFailed] = useState(false);
@@ -17,6 +17,7 @@ function GameForm({ game, profile, section, onSaved, onRemoved }) {
   const [values, setValues] = useState(section?.sharedDetails || sharedDetails(section?.details));
   // This game's own communication languages; independent of the profile languages and other games.
   const [languages, setLanguages] = useState(() => toLanguageSelection(parseLanguageText(values.language)));
+  const originalLanguage = section?.sharedDetails?.language || section?.details?.language || '';
   const languageInput = useRef(null);
   const originalRegion = section?.sharedDetails?.server || section?.details?.server || '';
   const [regionChoice, setRegionChoice] = useState(playRegions.includes(originalRegion) && originalRegion !== 'Other' ? originalRegion : originalRegion ? 'Other' : '');
@@ -30,7 +31,7 @@ function GameForm({ game, profile, section, onSaved, onRemoved }) {
   }
   async function submit(event) {
     event.preventDefault(); setError(null);
-    const languageProblem = validateLanguageSelection(languages, gameLanguageLimits);
+    const languageProblem = validateLanguageSelection(languages, { ...gameLanguageLimits, originalText: originalLanguage });
     if (languageProblem) {
       setError({ message: 'Please check the highlighted fields.', fields: { 'details.language': languageProblem } });
       languageInput.current?.focus();
@@ -38,7 +39,7 @@ function GameForm({ game, profile, section, onSaved, onRemoved }) {
     }
     setBusy(true);
     try {
-      const details = sharedDetails({ ...values, language: formatLanguageText(fromLanguageSelection(languages)) });
+      const details = sharedDetails({ ...values, language: formatGameLanguageText(fromLanguageSelection(languages), originalLanguage) });
       const result = await api(`/profiles/${profile.id}/games${section ? `/${game._id}` : ''}`, { method: section ? 'PUT' : 'POST', body: section ? { details, experience } : { gameId: game._id, details, experience } });
       // Tournament entries are saved with their game profile, so this confirmation covers them too.
       onSaved(result.section); notify(section ? 'Game profile saved.' : 'Game profile added.');

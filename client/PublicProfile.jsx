@@ -7,6 +7,7 @@ import { gameFields } from '../shared/game-form.js';
 export default function PublicProfile({ profileId }) {
   const [state, setState] = useState({ loading: true });
   useEffect(() => {
+    if (!profileId) { setState({ error: { status: 404, message: 'Profile not found.' } }); return; }
     Promise.all([api(`/public/profiles/${profileId}`), api('/games')])
       .then(([data, catalog]) => setState({ data, games: catalog.games }))
       .catch(error => setState({ error }));

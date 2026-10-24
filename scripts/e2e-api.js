@@ -10,6 +10,8 @@ import { Game } from '../server/modules/games/model.js';
 import { seedGames } from '../server/modules/games/catalog.js';
 import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from '../tests/fixtures/competition-provider.js';
+import { hashPassword } from '../server/modules/auth/passwords.js';
+import { edgeAccount, edgeDetails } from '../tests/fixtures/profile-edge-cases.js';
 
 await mkdir('.local-data', { recursive: true });
 const directory = await mkdtemp(resolve('.local-data/browser-'));
@@ -20,6 +22,11 @@ await Promise.all([User.init(), PlayerProfile.init(), PlayerGame.init(), Game.in
 await seedGames();
 await Game.create({ slug: 'local-valorant', providerId: 26, name: 'Valorant', enabled: true, schemaVersion: 2, fields: [] });
 await Game.create({ slug: 'local-mobile-legends', providerId: 34, name: 'Mobile Legends: Bang Bang', enabled: true, schemaVersion: 2, fields: [] });
+// Simulate records saved before the language picker. This database is disposable.
+const edgeUser = await User.create({ email: edgeAccount.email, passwordHash: await hashPassword(edgeAccount.password) });
+const edgeProfile = await PlayerProfile.create({ owner: edgeUser._id, displayName: 'W'.repeat(50), bio: 'Synthetic public-profile regression fixture.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] });
+const rocket = await Game.findOne({ slug: 'rocket-league' });
+await PlayerGame.create({ profile: edgeProfile._id, game: rocket._id, schemaVersion: 2, details: edgeDetails });
 // Deterministic provider fixtures; browser tests never spend provider quota or use a real token.
 const tournamentSearch = createTournamentSearch({ token: 'browser-tests-only', fetchImpl: fixtureFetch });
 // Test-process injection only: capture mail in ignored artifacts, never expose an inbox API.

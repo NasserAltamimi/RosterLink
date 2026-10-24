@@ -1,9 +1,26 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatLanguageText, fromLanguageSelection, gameLanguageLimits, normalizeLanguages, parseLanguageText, profileLanguageLimits, toLanguageSelection, validateLanguageSelection } from '../shared/languages.js';
+import { formatGameLanguageText, formatLanguageText, fromLanguageSelection, gameLanguageLimits, normalizeLanguages, parseLanguageText, profileLanguageLimits, toLanguageSelection, validateLanguageSelection } from '../shared/languages.js';
 import { sharedDetailsInput } from '../server/modules/games/player-form.js';
+import { legacyLanguage } from './fixtures/profile-edge-cases.js';
 
 const details = { platform: 'PC', server: 'Middle East', availability: 'Fri 20:00 Asia/Riyadh' };
+
+test('SF-06: valid compact legacy languages survive expansion without relaxing edited-value limits', () => {
+  const languages = parseLanguageText(legacyLanguage);
+  assert.equal(legacyLanguage.length, 114);
+  assert.equal(formatLanguageText(languages).length, 128);
+  assert.equal(formatGameLanguageText(languages, legacyLanguage), legacyLanguage);
+  const selection = toLanguageSelection(languages);
+  assert.equal(validateLanguageSelection(selection, { ...gameLanguageLimits, originalText: legacyLanguage }), null);
+  assert.equal(formatGameLanguageText(fromLanguageSelection(selection), legacyLanguage), legacyLanguage);
+  assert.equal(sharedDetailsInput.parse({ ...details, language: legacyLanguage }).language, legacyLanguage);
+  const changed = { ...selection, custom: `${selection.custom}, Zulu` };
+  assert.match(validateLanguageSelection(changed, { ...gameLanguageLimits, originalText: legacyLanguage }), /120 characters/);
+  assert.match(validateLanguageSelection(selection, gameLanguageLimits), /120 characters/);
+  assert.equal(formatGameLanguageText(['Arabic','English'], 'Arabic/English'), 'Arabic, English');
+  assert.equal(sharedDetailsInput.safeParse({ ...details, language: 'X'.repeat(121) }).success, false);
+});
 
 test('SF-04 / SF-06: Arabic only, English only, both, Other and combined selections produce the saved languages', () => {
   assert.deepEqual(fromLanguageSelection({ selected: ['Arabic'], other: false, custom: '' }), ['Arabic']);

@@ -15,6 +15,7 @@ import { seedGames } from '../server/modules/games/catalog.js';
 import { syncPandaScoreGames } from '../server/modules/games/pandascore.js';
 import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from './fixtures/competition-provider.js';
+import { edgeDetails, legacyLanguage } from './fixtures/profile-edge-cases.js';
 
 const details = { platform: 'PC', rank: 'Champion II', server: 'Middle East', language: 'Arabic, English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh; tryouts Fri' };
 const profileValues = { displayName: 'PilotPlayer', bio: 'Ready to learn and compete.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] };
@@ -63,6 +64,32 @@ async function createProfile(user) {
   const result = await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(profileValues).expect(201);
   return result.body.profile;
 }
+
+test('SF-06: unrelated edits preserve a valid legacy language string; unauthorized and oversized writes fail', async () => {
+  // Separate limiter budgets keep this regression independent of the existing auth suite.
+  const application = createApp(config);
+  const signUp = async () => {
+    const agent = request.agent(application);
+    const session = await agent.get('/api/auth/session').expect(200);
+    const result = await agent.post('/api/auth/register').set('X-CSRF-Token', session.body.csrfToken).send({ email: newEmail(), password }).expect(201);
+    return { agent, token: result.body.csrfToken };
+  };
+  try {
+    const user = await signUp(), profile = await createProfile(user);
+    await PlayerGame.create({ profile: profile.id, game: game.id, schemaVersion: 2, details: edgeDetails });
+    const path = `/api/profiles/${profile.id}/games/${game.id}`;
+    const updated = await user.agent.put(path).set('X-CSRF-Token', user.token).send({ details: { ...edgeDetails, availability: 'Updated availability only' } }).expect(200);
+    assert.equal(updated.body.section.details.language, legacyLanguage);
+    assert.equal(updated.body.section.details.availability, 'Updated availability only');
+    await user.agent.put(path).set('X-CSRF-Token', user.token).send({ details: { ...edgeDetails, language: 'X'.repeat(121) } }).expect(400);
+    const other = await signUp();
+    await other.agent.put(path).set('X-CSRF-Token', other.token).send({ details: edgeDetails }).expect(404);
+    await request(application).put(path).send({ details: edgeDetails }).expect(403);
+    const stored = await PlayerGame.findOne({ profile: profile.id, game: game.id });
+    assert.equal(stored.details.get('language'), legacyLanguage);
+    assert.equal(stored.details.get('availability'), 'Updated availability only');
+  } finally { await application.locals.sessionStore.close(); }
+});
 
 test('provider catalog sync preserves Rocket League, updates icons and allows additional game profiles', async () => {
   let catalog = [{ id: 22, name: 'Rocket League', slug: 'rl' }, { id: 26, name: 'Valorant', slug: 'valorant', image_url: 'https://example.com/valorant.png' }];
