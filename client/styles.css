@@ -114,6 +114,7 @@ p { line-height: 1.65; }
 .avatar { width: 88px; height: 88px; border: 5px solid white; border-radius: 18px; background: #153e34; color: #d8f078; display: grid; place-content: center; overflow: hidden; margin-block-start: -42px; position: relative; font-size: 1.9rem; font-weight: 700; }
 .avatar img { width: 88px; height: 88px; object-fit: cover; }
 .player-heading { display: flex; justify-content: space-between; align-items: center; margin-block-start: 19px; gap: 20px; }
+.heading-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 .player-heading .eyebrow { font-size: .55rem; margin-block-end: 6px; }
 .player-heading h2 { font-size: 1.8rem; margin-block-end: 6px; overflow-wrap: anywhere; }
 .player-heading p { font-size: .81rem; margin-block-end: 0; }
