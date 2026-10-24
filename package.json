@@ -1,0 +1,46 @@
+{
+  "name": "rosterlink",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "node --watch server/index.js",
+    "dev:client": "vite --host 127.0.0.1",
+    "db": "node scripts/local-mongo.js",
+    "setup:local": "node scripts/setup-local.js",
+    "seed": "node server/seed.js",
+    "sync:games": "node scripts/sync-games.js",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "test": "node --test --test-concurrency=1 tests/*.test.js",
+    "test:e2e": "playwright test",
+    "smoke:pandascore": "node scripts/pandascore-smoke.js",
+    "check": "npm test && npm run build"
+  },
+  "dependencies": {
+    "connect-mongo": "6.0.0",
+    "dotenv": "18.0.9",
+    "express": "5.3.0",
+    "express-rate-limit": "8.7.1",
+    "express-session": "1.19.0",
+    "helmet": "8.3.0",
+    "mongoose": "9.11.3",
+    "multer": "2.5.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sharp": "0.35.5",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@vitejs/plugin-react": "6.1.2",
+    "concurrently": "10.0.6",
+    "mongodb-memory-server": "11.3.0",
+    "supertest": "7.3.1",
+    "vite": "8.3.5"
+  }
+}
