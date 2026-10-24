@@ -22,7 +22,7 @@ New/updated player-game sections use `schemaVersion: 2`. Existing game/profile I
 | --- | --- |
 | `details.platform` | Required shared platform option. No platform is inferred for old sections; the player selects it on their next save. |
 | `details.server` | Required Play region value, still stored as a string. Existing custom text prepopulates Other without changing the value. |
-| `details.language` | Required communication languages text. Existing `language` is reused. |
+| `details.language` | Required communication languages, chosen with the shared Arabic / English / Other picker and stored as one comma-separated string (max 120 characters). Existing `language` is reused; earlier free text separated by commas, slashes or semicolons reopens with the matching selections and any other languages under Other. Values are trimmed and de-duplicated on the client and server. This value is separate from the profile's general languages. |
 | `details.availability` | Required playing/tryout availability text. Existing `availability` is reused; the player can expand it for tryouts. |
 | `details.rank` | Optional self-reported text within 100 characters. Existing `rank` is reused. Missing rank becomes an empty string on save. |
 | `experience[]` | Up to 20 entries with `name`, `edition`, `placement`, optional `stage`, optional old `tournament` reference or grouped `competition` reference, and optional typed `result`. See the linked compatibility documentation. |

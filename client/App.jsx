@@ -7,12 +7,15 @@ import Games from './Games.jsx';
 import { Brand, Loading, Notice } from './components.jsx';
 import { LegacyDetails } from './Experience.jsx';
 import { gameFields } from '../shared/game-form.js';
+import { useToast } from './Toasts.jsx';
 
 function Overview({ profile, sections, games, navigate }) {
+  const notify = useToast();
   const [linkStatus, setLinkStatus] = useState(null);
   async function copyLink() {
     const link = `${location.origin}/p/${profile.id}`;
-    try { await navigator.clipboard.writeText(link); setLinkStatus('Public link copied.'); }
+    // The fallback stays inline because the player still needs to copy the link manually.
+    try { await navigator.clipboard.writeText(link); setLinkStatus(null); notify('Public link copied.'); }
     catch { setLinkStatus(`Copy this link: ${link}`); }
   }
   return <>
@@ -37,6 +40,7 @@ function Overview({ profile, sections, games, navigate }) {
 }
 
 export default function App() {
+  const notify = useToast();
   const [user, setUser] = useState(null);
   const [games, setGames] = useState([]);
   const [data, setData] = useState({ profile: null, sections: [] });
@@ -66,7 +70,7 @@ export default function App() {
   }
   async function logout() {
     setLoggingOut(true); setError(null);
-    try { await endSession(); setUser(null); setData({ profile: null, sections: [] }); setPage('overview'); }
+    try { await endSession(); setUser(null); setData({ profile: null, sections: [] }); setPage('overview'); notify('Logged out.'); }
     catch (error) { setError(error); }
     finally { setLoggingOut(false); }
   }

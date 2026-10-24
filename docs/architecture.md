@@ -42,7 +42,7 @@ Replacement/removal cleans up the previous file. Missing media returns 404. Disk
 
 ## UI and localization
 
-Reusable Field/Notice/Submit/Loading components provide labels, field errors, status announcements, and pending states. Failed saves retain edits. Responsive layouts stack on mobile. English/LTR is implemented; Arabic text uses `dir="auto"` and spacing uses logical properties. Full Arabic translation/RTL acceptance remains future work.
+Reusable Field/Notice/Submit/Loading components provide labels, field errors, status announcements, and pending states. One `LanguagePicker` (Arabic / English / Other) serves both the profile languages and each game's communication languages, with rules shared in `shared/languages.js`. Successful saves, removals, registration, login and logout show a dismissible top-right success toast (`client/Toasts.jsx`) from one polite live region; errors and field validation stay inline. Failed saves retain edits. Responsive layouts stack on mobile. English/LTR is implemented; Arabic text uses `dir="auto"` and spacing uses logical properties. Full Arabic translation/RTL acceptance remains future work.
 
 ## Future boundaries
 
