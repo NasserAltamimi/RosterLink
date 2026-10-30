@@ -15,6 +15,7 @@ import { HttpError, handleError } from './lib/errors.js';
 import { createTournamentSearch, tournamentRoutes } from './modules/games/tournaments.js';
 import { gameFields } from '../shared/game-form.js';
 import { createResetMailer } from './mail/smtp.js';
+import { recruitmentRoutes } from './modules/recruitment/routes.js';
 
 export function createApp({ mongoUri, sessionSecret, uploadDir, origin, production = false, trustProxy = false, pandaScoreToken, tournamentSearch, smtp, resetMailer = createResetMailer(smtp) }) {
   const app = express();
@@ -49,6 +50,7 @@ export function createApp({ mongoUri, sessionSecret, uploadDir, origin, producti
   const imageStorage = localImageStorage(uploadDir);
   app.use('/api/profiles', profileRoutes(imageStorage));
   app.use('/api/public/profiles', publicProfileRoutes(imageStorage));
+  app.use('/api', recruitmentRoutes());
   app.use('/api', (req, res) => res.status(404).json({ message: 'API route not found.' }));
   const dist = resolve('dist');
   if (existsSync(dist)) {

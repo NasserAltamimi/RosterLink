@@ -12,13 +12,14 @@ import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from '../tests/fixtures/competition-provider.js';
 import { hashPassword } from '../server/modules/auth/passwords.js';
 import { edgeAccount, edgeDetails } from '../tests/fixtures/profile-edge-cases.js';
+import { recruitmentModels } from '../server/modules/recruitment/models.js';
 
 await mkdir('.local-data', { recursive: true });
 const directory = await mkdtemp(resolve('.local-data/browser-'));
 const mongo = await MongoMemoryServer.create({ binary: { version: '8.0.17', downloadDir: resolve('.local-data/mongodb-binaries') }, instance: { dbName: 'rosterlink_browser', storageEngine: 'wiredTiger' } });
 const mongoUri = mongo.getUri('rosterlink_browser');
 await connectDatabase(mongoUri);
-await Promise.all([User.init(), PlayerProfile.init(), PlayerGame.init(), Game.init()]);
+await Promise.all([User, PlayerProfile, PlayerGame, Game, ...recruitmentModels].map(model => model.init()));
 await seedGames();
 await Game.create({ slug: 'local-valorant', providerId: 26, name: 'Valorant', enabled: true, schemaVersion: 2, fields: [] });
 await Game.create({ slug: 'local-mobile-legends', providerId: 34, name: 'Mobile Legends: Bang Bang', enabled: true, schemaVersion: 2, fields: [] });

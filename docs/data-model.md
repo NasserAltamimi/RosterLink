@@ -1,5 +1,19 @@
 # MongoDB guide and schema history — TF-03 / KF-04
 
+## Sprint 2 additive collections
+
+| Model | Relationships and persistence rules | Indexes |
+| --- | --- | --- |
+| Organization | Name, description, region, optional HTTP(S) website; nonempty User manager references. Creator added automatically. | `managers` |
+| Team | Immutable Organization and Game references; name/description; team-scoped User manager references. | `organization`, `managers` |
+| Opening | Immutable Team and server-derived Game; role, platform, game-specific requirements, optional rank, region, language, schedule/timezone, UTC deadline, active/closed status, creator/updater/closure actors and timestamps. | `(status,deadline,game)`, `team` |
+
+Managers are membership references scoped to their Organization or Team document, not separate accounts or global User flags. One user can have a player profile and roles in multiple organizations/teams. `$addToSet` makes grants idempotent; `$pull` revokes. Organization manager removal includes an atomic size guard so simultaneous requests cannot remove the last manager. Role lists require organization-wide permission; public DTOs omit membership and actor identities.
+
+All API writes validate with strict Zod schemas before Mongoose persistence. Parent references are resolved by backend permission checks. Teams must select an enabled game when created; team organization/game cannot later change through the API. Openings copy the selected team's game only on creation. UTC deadline comparison excludes expired openings immediately from active lists. Closed records are retained, never deleted; active expired records may receive a future deadline by authorized edit.
+
+These collections are additive: no rewrite of Sprint 1 users, profiles, games, images, sessions, reset tokens, or shared links. Startup initializes their indexes before accepting traffic. Tests use independent disposable WiredTiger databases and verify acknowledged data across an actual MongoDB stop/start.
+
 ## Schema version 1
 
 Initial Sprint 1 schema; no existing application-data migration. Mongoose initializes indexes before the API starts. Review production index changes explicitly in future migrations. `npm run seed` is an idempotent catalog update; it never rewrites player sections or creates fake users.

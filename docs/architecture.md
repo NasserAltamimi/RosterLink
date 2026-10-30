@@ -1,5 +1,7 @@
 # Sprint 1 architecture and API
 
+This document retains Sprint 1 design history. The current Sprint 2 additions are documented below; existing authentication, profiles, sharing, recovery, and media behavior remain in place.
+
 JavaScript modular monolith: **React/Vite → Express → MongoDB/Mongoose**. `client/` owns presentation/API calls. Backend modules cover `auth`, `profiles`, and `games`. `server/storage/local-images.js` isolates media storage. Credentials and persistence stay on the backend.
 
 ## Session decision
@@ -55,3 +57,28 @@ Reusable Field/Notice/Submit/Loading components provide labels, field errors, st
 - Social/moderation: separate posts/interactions/reports, not unlimited organization arrays.
 
 No premature models or empty future service layers were added. Liquipedia access remains unconfirmed; the optional PandaScore access probe is not a completed product integration or identity-verification feature.
+
+## Sprint 2 organizations and recruitment
+
+`server/modules/recruitment/` owns organizations, teams, permissions and openings. `client/Recruitment.jsx` provides public pages/browsing and the management workspace, reusing API/session/CSRF, field/error/loading controls, toast feedback and existing styling. There is no second account system or global manager flag.
+
+| Method | Endpoint | Access and behavior |
+| --- | --- | --- |
+| GET | `/api/organizations/:id` | Public organization DTO and child teams; no managers/emails |
+| POST | `/api/organizations` | Signed-in user; creator becomes organization manager |
+| PUT | `/api/organizations/:id` | Organization manager; strict validated page replacement |
+| POST | `/api/organizations/:id/teams` | Organization manager; enabled catalog `gameId`, name, description |
+| GET / PUT | `/api/teams/:id` | Public read / scoped manager edit of name and description; organization and game immutable |
+| GET | `/api/management` | Signed-in user; only organizations/teams/openings in their current management scope |
+| GET / POST / DELETE | `/api/organizations/:id/roles` | Organization managers only; list, assign `{email,teamId:null|id}`, revoke `{userId,teamId:null|id}` |
+| GET | `/api/openings` | Public active future-deadline openings, optional `game`, `role`, `region`, `language` filters |
+| GET | `/api/openings/:id` | Public detail including closed/expired status |
+| POST | `/api/teams/:id/openings` | Organization or assigned team manager; game derived by server |
+| PUT | `/api/openings/:id` | Current scoped manager; active record only; future deadline required |
+| POST | `/api/openings/:id/close` | Current scoped manager; idempotent retained closure with actor/time |
+
+Every write uses the existing CSRF/origin/session protections. Permissions are looked up from MongoDB for every request, including existing logged-in sessions after revocation. Organization managers can manage every child team and assign/revoke both scopes. Team managers can only edit their team and publish/edit/close its openings. Client-supplied ownership, game, status and scope changes on resource forms are rejected. Management DTOs indicate organization-wide authority without exposing manager lists; only the organization-authorized role endpoint reveals assigned email addresses. Last-manager removal uses one atomic conditional update on the organization; concurrent removals cannot leave zero managers.
+
+Opening requirements use the existing shared platform options, optional free-text rank/context, and required game-specific text rather than inventing external-provider rank catalogs. Role, requirements, region, language, schedule and timezone have strict types/lengths; deadlines require a valid ISO datetime with offset and an instant strictly later than server time. The browser converts `datetime-local` to UTC on submission. Schedule times are descriptive text paired with a validated IANA timezone, not recurring events. Responses serialize deadlines as UTC ISO strings and display them in browser-local time. Expiry is calculated at read time, without a cron job or deletion. Closing records sets status, closedAt, closedBy and updatedBy; closed records cannot reopen. Updating an expired but unclosed record with a future deadline republishes it.
+
+Active list filters are combined with AND; game is an exact ObjectId, and the other filters are escaped literal case-insensitive substrings. Invalid/unknown query keys return 400; no user-supplied MongoDB operators or regular expressions are executed. Lists are currently unpaginated (see evidence limitations). No applications, tryouts, notifications, social content, or new provider integration is included.
