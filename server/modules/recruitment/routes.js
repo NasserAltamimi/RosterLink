@@ -14,9 +14,19 @@ const orgValues = z.object({ name: text(100), description: text(2000), region: t
   website: z.union([z.literal(''), z.url().max(500).refine(value => /^https?:\/\//i.test(value), 'Use an HTTP or HTTPS URL.')]).default(''),
 }).strict();
 const teamValues = z.object({ name: text(100), description: text(2000), gameId: id }).strict();
-const scheduleSlots = z.array(z.object({ day: z.enum(scheduleDays.map(([day]) => day)), start: z.enum(scheduleTimes), end: z.enum(scheduleTimes) }).strict()).min(1, 'Select at least one playing day.').max(7)
+// Validate the selected days/times on the server, not only in the browser.
+const scheduleSlots = z.array(z.object({
+  day: z.enum(scheduleDays.map(([day]) => day)),
+  start: z.enum(scheduleTimes), // Only the supported 15-minute time choices.
+  end: z.enum(scheduleTimes),
+}).strict())
+  .min(1, 'Select at least one playing day.')
+  .max(7)
+  // Each day has one time block; duplicate days are not allowed.
   .refine(slots => new Set(slots.map(slot => slot.day)).size === slots.length, 'Choose each day only once.')
+  // Equal times would create an ambiguous zero-hour or full-day session.
   .refine(slots => slots.every(slot => slot.start !== slot.end), 'Start and end times must be different.')
+  // Check overnight blocks too, including sessions crossing into a new week.
   .refine(slots => !scheduleOverlaps(slots), 'Playing times cannot overlap across days.');
 const openingValues = z.object({ role: text(100), requirements: text(2000), platform: z.enum(platforms), rank: z.string().trim().max(100).default(''),
   region: text(100), language: text(100), scheduleSlots,
@@ -26,14 +36,25 @@ const openingValues = z.object({ role: text(100), requirements: text(2000), plat
 const has = (list, user) => list.some(value => String(value) === String(user));
 const clean = doc => { const { _id, __v, managers, createdBy, updatedBy, closedBy, ...values } = doc.toObject ? doc.toObject() : doc; return { id: String(_id), ...values }; };
 const get = async (Model, value) => { if (!id.safeParse(value).success) throw new HttpError(404, 'Page not found.'); const doc = await Model.findById(value); if (!doc) throw new HttpError(404, 'Page not found.'); return doc; };
+// Read current memberships from MongoDB on every authorized request.
+// Revoked managers therefore lose access without needing to log out.
 async function orgManager(req, orgId) {
   const org = await get(Organization, orgId);
-  if (!has(org.managers, req.user.id)) throw new HttpError(403, 'Organization manager permission is required.');
+  if (!has(org.managers, req.user.id)) {
+    throw new HttpError(403, 'Organization manager permission is required.');
+  }
   return org;
 }
+
 async function teamManager(req, teamId) {
-  const team = await get(Team, teamId), org = await get(Organization, String(team.organization));
-  if (!has(org.managers, req.user.id) && !has(team.managers, req.user.id)) throw new HttpError(403, 'You cannot manage this team.');
+  const team = await get(Team, teamId);
+  const org = await get(Organization, String(team.organization));
+
+  // Organization managers can manage every team under their organization.
+  // Team managers can manage only the specific team containing their user ID.
+  if (!has(org.managers, req.user.id) && !has(team.managers, req.user.id)) {
+    throw new HttpError(403, 'You cannot manage this team.');
+  }
   return team;
 }
 async function decoratedOpenings(query) {
