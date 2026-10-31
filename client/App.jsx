@@ -76,7 +76,7 @@ export default function App() {
   }
   if (loading) return <main className="startup"><Brand /><Loading /></main>;
   if (!user && error) return <main className="startup"><Brand /><div className="card retry-card"><h1>Let’s reconnect.</h1><Notice error={error} /><button className="button primary" onClick={bootstrap}>Try again</button></div></main>;
-  if (!user) return <Auth onAuthenticated={authenticated} />;
+  if (!user) return <><nav className="public-recruitment-links" aria-label="Recruitment"><a href="/openings">Browse openings ↗</a><a href="/manage">Manage organization ↗</a></nav><Auth onAuthenticated={authenticated} /></>;
 
   const { profile, sections } = data;
   const updateProfile = profile => setData(previous => ({ ...previous, profile }));
@@ -85,6 +85,7 @@ export default function App() {
     <header className="topbar"><Brand /><div className="topbar-right"><span className="account-email">{user.email}</span><button className="button secondary compact" onClick={logout} disabled={loggingOut}>{loggingOut ? 'Logging out…' : 'Log out'}</button></div></header>
     <div className="workspace">
       <aside className="sidebar"><p className="eyebrow">PLAYER WORKSPACE</p><nav aria-label="Player workspace">{[['overview', '◫', 'Overview'], ['edit', '✎', 'Edit profile'], ['games', '⊞', 'Game profiles']].map(([id, icon, label]) => <button key={id} onClick={() => setPage(id)} aria-current={page === id ? 'page' : undefined}><span aria-hidden="true">{icon}</span>{label}<span className="nav-arrow" aria-hidden="true">↗</span></button>)}</nav>
+        <nav className="recruitment-sidebar" aria-label="Recruitment"><a href="/openings">Browse openings ↗</a><a href="/manage">Manage organization ↗</a></nav>
         <div className="sidebar-note"><span className="small-label">A STRONG START</span><h3>Your story.<br />Your next team.</h3><p>Build a profile that shows what you bring to the game.</p><span className="sidebar-arrow" aria-hidden="true">↗</span></div>
         <p className="sidebar-footer">ROSTERLINK / PLAYER FOUNDATION</p>
       </aside>

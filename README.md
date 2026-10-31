@@ -2,7 +2,7 @@
 
 A responsive esports player platform for SWE 444 at King Saud University. The wider workflow is **player profile → team opening → application → review → tryout → decision**.
 
-This branch implements accounts, secure sessions, password recovery, manual player profiles, a MongoDB-backed game catalog, separate game sections, persistent profile/header images, and PandaScore competition metadata lookup. All selectable games share one form, with self-reported rank and competition results. Organization management, recruitment, notifications, verification, social features, and player-account integration remain later work.
+This branch implements accounts, secure sessions, password recovery, manual player profiles, a MongoDB-backed game catalog, separate game sections, persistent profile/header images, and PandaScore competition metadata lookup. All selectable games share one form, with self-reported rank and competition results. Sprint 2 adds parent organizations, game-specific teams, scoped management roles, recruitment openings, and public browsing/filtering. Applications, tryouts, notifications, verification, social features, and player-account integration remain later work.
 
 ## Run locally
 
@@ -45,7 +45,7 @@ npm run test:e2e
 
 - `npm test`: domain and Supertest integration checks against an isolated real MongoDB process, including database restart persistence and authorization attacks. Development data is untouched.
 - `npm run build`: frontend compilation to ignored `dist/`.
-- `npm run test:e2e`: Playwright runs React/Express/MongoDB in desktop and mobile Chrome. Requires installed Google Chrome; alternatively change `channel` in `playwright.config.js` or install Playwright Chromium and omit `channel`. Uses ports **3002 and 5174** and an isolated database. Reports/screenshots are in ignored `playwright-report/` and `test-results/`.
+- `npm run test:e2e`: Playwright runs React/Express/MongoDB in desktop and mobile Chrome, restarting the API and isolated database between device projects so their authentication attempts do not share a rate-limit budget. Application rate limits are unchanged. Requires installed Google Chrome; alternatively change `channel` in `playwright.config.js` or install Playwright Chromium and omit `channel`. Uses ports **3002 and 5174**. Reports/screenshots are in ignored `playwright-report/` and `test-results/` (the latest project run); tracked Sprint 2 evidence images include both devices. Arguments such as `--project=desktop-chrome` or a test filename are forwarded.
 - `npm run check`: tests followed by the build, with failure propagation.
 
 To demonstrate the compiled frontend with Express, keep MongoDB running, build, then in a separate PowerShell terminal:
@@ -68,6 +68,16 @@ Open http://127.0.0.1:3001. Production requires HTTPS, `NODE_ENV=production`, th
 7. Try an invalid login, duplicate email, invalid image, and failed connection. Check useful errors and preserved form edits.
 
 `npm run sync:games` imports PandaScore's game catalog using the server-only `PANDASCORE_API_TOKEN` in `.env`. All selectable games, including Rocket League, use one shared form: platform, server/play region, communication languages, and playing/tryout availability are required; rank and competitive experience are optional. Tournament experience supports backend PandaScore search and manual entry. Participation and placement are **self-reported**. Existing player-game IDs and original details are retained. See [shared-form behavior, migration, actual coverage, bounds, and demonstration](docs/shared-game-form.md).
+
+## Demonstrate Sprint 2
+
+Use **Manage organization** (`/manage`) with an existing signed-in account; a player profile is optional. Create an organization, add game-specific teams, then assign existing registered users by email to organization-wide or individual-team management scopes. Team managers cannot assign roles or manage sibling teams. At least one organization manager must remain.
+
+Publish an opening from its team with role, platform, game-specific requirement text, optional rank/context, region, language, IANA timezone and a future deadline. Choose required playing availability from a weekly day/time table, with one time block per selected day and 15-minute time choices. End times earlier than start times finish the next day; overlapping blocks are rejected. The API stores structured selections and generates a consistent schedule summary. Previously saved text schedules remain readable; editing them requires choosing structured days/times. The game comes from the immutable team reference. Deadlines entered in browser-local time are stored as UTC instants; schedules keep their explicit timezone. Active expired openings may be edited with a new future deadline; manually closed openings remain preserved and cannot be edited or reopened.
+
+Visit **Browse openings** (`/openings`) signed in or as a guest. Filters combine game and literal case-insensitive role/region/language text. Public organization (`/organizations/:id`), team (`/teams/:id`), and opening (`/openings/:id`) links work after refresh. Closed/expired details remain readable with their status; active lists exclude them.
+
+See [Sprint 2 evidence](docs/sprint-2-evidence.md) for the two-organization demonstration, exact verification results, screenshots, test cases, and review table. `node --test tests/recruitment.test.js` runs the isolated MongoDB API/security/restart checks; `npm run test:e2e -- tests/browser/recruitment.spec.js` runs the desktop/mobile browser journeys. No provider credentials are needed for Sprint 2.
 
 See [competition-selection fixes and verified EWC/MSC coverage](docs/competition-selection-fixes.md) for the region dropdown, grouped competition editions, separate result choices, compatibility rules, and live provider/backend/UI checks.
 
