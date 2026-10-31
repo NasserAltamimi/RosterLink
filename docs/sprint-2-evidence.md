@@ -1,5 +1,22 @@
 # Sprint 2 evidence — organizations and recruitment
 
+## Follow-up: structured schedule picker — October 31, 2026
+
+User requested choosing availability from a table to avoid inconsistent free-text schedules. Replaced the opening's Schedule textbox with a responsive, labelled weekly table: select days and choose From/To times in 15-minute increments, retaining the explicit schedule timezone. One block per selected day is supported. Earlier end times finish the following day, with a visible explanation. The API requires structured `scheduleSlots`, validates allowed days/times and rejects empty selections, duplicate days, equal start/end times, overlapping intervals (including the Saturday/Sunday boundary), extra properties and free-text schedule writes. MongoDB stores both the structured values and a server-generated ordered summary.
+
+Implementation commit: `e32241c06b2577de62ed11e553e14d9b19faaa3b`.
+
+Existing text-only schedules remain readable and untouched. When editing an old opening, its prior schedule is shown; the manager explicitly chooses days/times before saving. No local user data was reset or migrated. Updated recruitment browser journeys select the table, verify values on edit, save, refresh and check persisted slots/overnight summaries. The existing running app at `http://127.0.0.1:5173` serves the change; health responds 200.
+
+Verification on October 31:
+
+- `npm run check`: **60/60 tests passed**, then production build passed (34 modules; 231 ms build). Log `.local-schedule-check.log`.
+- `npm run test:e2e -- tests/browser/recruitment.spec.js`: **4/4 passed**, desktop 2/2 (15.6 seconds), mobile 2/2 (16.4 seconds). Log `.local-schedule-browser.log`. Regenerated editor, team and filtered-result screenshots below; visually inspected the mobile table and verified no overflow using existing screenshot assertions.
+- API integration adds normalization, invalid-slot, overlap, legacy-record-read and explicit upgrade checks. The other 59 backend/domain tests also pass. The full 30-case browser regression result below is from October 30; this follow-up reran the four affected browser checks rather than claiming a fresh full-browser run.
+- Files: `shared/schedule.js`, `client/SchedulePicker.jsx`, `client/Recruitment.jsx`, `client/styles.css`, recruitment models/routes, API/browser tests, README/data-model/architecture documentation and affected screenshots. No account/profile/recovery behavior changed. One daily time block and 15-minute granularity are current limits; recurring calendar/DST automation is outside scope.
+
+The October 30 record below is historical; its free-text schedule description is superseded by this follow-up.
+
 Sprint: **October 28–November 4, 2026**. Actual local implementation/verification: **October 30, 2026**, Asia/Riyadh. This records observed local results, not a deployment or team contribution claim. Trello was not changed.
 
 ## Baseline and preservation
