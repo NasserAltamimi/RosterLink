@@ -1,5 +1,7 @@
 # Sprint 2 evidence — organizations and recruitment
 
+For the new full verification performed during publication preparation, see [Sprint 2 PR verification — October 31](qa/sprint2-pr-verification-2026-10-31.md). Historical results below remain separate from the current run.
+
 ## Follow-up: structured schedule picker — October 31, 2026
 
 User requested choosing availability from a table to avoid inconsistent free-text schedules. Replaced the opening's Schedule textbox with a responsive, labelled weekly table: select days and choose From/To times in 15-minute increments, retaining the explicit schedule timezone. One block per selected day is supported. Earlier end times finish the following day, with a visible explanation. The API requires structured `scheduleSlots`, validates allowed days/times and rejects empty selections, duplicate days, equal start/end times, overlapping intervals (including the Saturday/Sunday boundary), extra properties and free-text schedule writes. MongoDB stores both the structured values and a server-generated ordered summary.
@@ -21,10 +23,10 @@ Sprint: **October 28–November 4, 2026**. Actual local implementation/verificat
 
 ## Baseline and preservation
 
-- Supplied workspace `C:\Users\naro\444` was empty and not a Git repository. Cloned the existing repository into `C:\Users\naro\444\RosterLink`; inspected clean `main`, remotes, and history, then fetched origin and created `feature/sprint-2-organizations-recruitment` from `origin/main` at `3fc329d`.
+- Supplied workspace was empty and not a Git repository. Cloned the existing repository into its `RosterLink/` directory; inspected clean `main`, remotes, and history, then fetched origin and created `feature/sprint-2-organizations-recruitment` from `origin/main` at `3fc329d`. Machine-specific absolute paths are omitted from this published record.
 - Read README, CONTRIBUTING, architecture/data-model documents, Sprint 1 evidence, dated Sprint 1 fixes and relevant implementation/tests. No repository or workspace/parent `AGENTS.md` was present. `.agents/qa-project-context.md` was absent.
 - Base includes teammate language/toast UI, public sharing, legacy-language/public-route fixes, and password recovery. Reused existing React/Vite, Express, Mongoose, catalog, session/CSRF/origin protection, labelled field/notice/loading controls, success toasts, and responsive styles.
-- Also inspected the separate existing checkout at `C:\Users\naro\Projects\RosterLink`: clean `feature/SF-03-forgotten-password` at `a4715c4`. That commit is an ancestor of this latest-main base. Did not modify its branch, files, ignored environment, media or database.
+- Also inspected a separate existing local checkout: clean `feature/SF-03-forgotten-password` at `a4715c4`. That commit is an ancestor of this latest-main base. Did not modify its branch, files, ignored environment, media or database.
 - Trello board/card URLs could not be read through the web tool. The user's explicit SF-14/15/18/19/20/21 requirements were the implementation contract. No push, PR, merge, deployment, Trello update or external-provider integration occurred.
 
 ## Story behavior and actual status
@@ -56,7 +58,7 @@ Evidence commit follows implementation so the actual implementation SHAs can be 
 | `server/app.js`, `server/index.js` | Mount routes after existing session/CSRF middleware; initialize new indexes before API startup |
 | `client/Recruitment.jsx` | Organization/team public pages; management forms/roles; opening editor, detail and browse/filter UI |
 | `client/App.jsx`, `client/main.jsx`, `client/styles.css` | Entry links and URL routing; reuse existing workspace/UI; responsive recruitment layout |
-| `tests/recruitment.test.js` | Eleven real-MongoDB API/security/lifecycle/filter/persistence scenarios |
+| `tests/recruitment.test.js` | Eleven original real-MongoDB API/security/lifecycle/filter/persistence scenarios; twelve after the structured-schedule follow-up |
 | `tests/browser/recruitment.spec.js` | Desktop/mobile real UI journeys, role revocation with stale UI, validation, retry and screenshots |
 | `scripts/e2e-api.js` | Initialize new model indexes in isolated browser test API |
 | `scripts/run-browser-tests.js`, `package.json` | Run device projects in separate API/database lifecycles; preserve unchanged production authentication rate limits and forward test filters |
@@ -67,7 +69,7 @@ No dependencies, account/authentication/profile/media/recovery implementation or
 
 ## Exact commands and actual results
 
-All commands run in `C:\Users\naro\444\RosterLink`, Windows PowerShell, Node **24.18.1**, npm **11.16.0**. API/browser tests use real isolated **MongoDB 8.0.17** processes; no development database or user data is seeded or reset. Browser tests use installed Google Chrome and Pixel 7 Chrome emulation.
+All commands run from the repository root in Windows PowerShell, Node **24.18.1**, npm **11.16.0**. API/browser tests use real isolated **MongoDB 8.0.17** processes; no development database or user data is seeded or reset. Browser tests use installed Google Chrome and Pixel 7 Chrome emulation.
 
 | Command | Actual result |
 | --- | --- |
