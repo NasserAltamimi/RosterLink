@@ -283,3 +283,111 @@ p { line-height: 1.65; }
   .language-custom { max-width: none; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition: none !important; } }
+
+/* Shared account shell: primary navigation stays the same across every journey. */
+.site-header { position: sticky; inset-block-start: 0; z-index: 15; background: #fff; border-block-end: 1px solid var(--border); }
+.header-inner { max-width: 1440px; min-height: 84px; margin-inline: auto; padding: 16px 32px; display: flex; align-items: center; gap: 24px; }
+.site-navigation { display: flex; align-items: center; justify-content: center; gap: 4px; flex: 1; }
+.site-navigation > a, .public-account-links > a:not(.button) { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 12px; border-radius: 7px; text-decoration: none; font-size: .8rem; font-weight: 600; color: #566b61; white-space: nowrap; }
+.site-navigation > a:hover, .site-navigation > a[aria-current=page] { color: var(--green); background: #e9efdf; }
+.site-navigation > a[aria-current=page] { box-shadow: inset 0 -2px #75944b; }
+.public-account-links { margin-inline-start: auto; display: flex; gap: 10px; align-items: center; }
+.account-control { position: relative; margin-inline-start: auto; }
+.account-trigger { padding: 10px 12px; gap: 8px; }
+.account-popover { position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + 12px); width: min(300px, calc(100vw - 32px)); padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: #fff; box-shadow: 0 12px 30px #173e341a; }
+.account-popover .eyebrow { font-size: .58rem; margin-block-end: 4px; }
+.account-address { font-size: .8rem; overflow-wrap: anywhere; padding-block-end: 12px; border-block-end: 1px solid var(--border); }
+.account-popover > a, .account-popover > button { display: flex; width: 100%; align-items: center; gap: 10px; color: var(--green); text-decoration: none; border: 0; border-radius: 6px; background: #fff; padding: 12px 8px; font-size: .82rem; text-align: start; min-height: 44px; }
+.account-popover > a:hover, .account-popover > button:hover { background: #f0f4e9; }
+.mobile-toggle { display: none; }
+.app-main { width: 100%; max-width: 1160px; margin-inline: auto; min-height: calc(100vh - 85px); padding: 40px 32px 28px; overflow-wrap: anywhere; }
+#main-content:focus { outline: none; }
+.account-page .auth-layout, .account-page .auth-story { min-height: calc(100vh - 85px); }
+.auth-tabs a { flex: 1; border-radius: 5px; padding: 10px; color: #64755f; font-size: .8rem; font-weight: 700; text-decoration: none; text-align: center; }
+.auth-tabs a[aria-current=page] { background: white; color: #173e34; box-shadow: 0 1px 4px #263c2014; }
+.page-intro > div { min-width: 0; }
+.page-intro > .button { flex-shrink: 0; }
+.workspace-welcome { display: flex; align-items: center; justify-content: space-between; gap: 30px; padding: 32px; border: 1px solid #d5dfbd; background: #e9efda; border-radius: 12px; margin-block-end: 24px; }
+.workspace-welcome h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+.workspace-welcome p:last-child { color: #566c4e; max-width: 650px; margin-block-end: 0; font-size: .9rem; }
+.workspace-welcome > svg { flex-shrink: 0; }
+.workspace-cards, .organization-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-block-end: 24px; }
+.destination-card { display: flex; flex-direction: column; align-items: flex-start; padding: 28px; gap: 12px; min-width: 0; }
+.destination-card > .section-heading { width: 100%; align-items: center; }
+.destination-card p, .destination-card h2, .destination-card h3 { margin: 0; }
+.destination-card .eyebrow { margin-block-start: 6px; }
+.destination-card h2 { font-size: 1.5rem; }
+.destination-card > p:not(.eyebrow) { font-size: .88rem; }
+.destination-card > .button, .destination-card > .heading-actions { margin-block-start: auto; padding-block-start: 12px; }
+.destination-card > .button { margin-block-start: 12px; padding-block-start: 12px; }
+.destination-icon { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: 10px; color: var(--green); background: #eef3e6; }
+.card-description { white-space: pre-wrap; }
+.workspace-opportunities { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 28px; }
+.workspace-opportunities > div { display: flex; align-items: center; gap: 20px; }
+.workspace-opportunities svg { flex-shrink: 0; }
+.workspace-opportunities h2 { font-size: 1.2rem; }
+.workspace-opportunities p { margin: 0; font-size: .85rem; }
+.workspace-opportunities > .button { flex-shrink: 0; }
+.organization-empty { padding-block: 56px; }
+.organization-empty > svg { margin-block-end: 20px; color: #648253; }
+.organization-empty p { max-width: 550px; margin-inline: auto; }
+.membership-note { max-width: 800px; }
+.profile-navigation { display: flex; flex-wrap: wrap; gap: 6px; border-block-end: 1px solid var(--border); margin-block-end: 32px; padding-block-end: 12px; }
+.profile-navigation a { padding: 12px 18px; min-height: 44px; font-size: .82rem; font-weight: 600; border-radius: 7px; color: #607369; text-decoration: none; }
+.profile-navigation a[aria-current=page] { background: #e5eddc; color: var(--green); }
+.profile-navigation a:hover { background: #edf2e8; }
+.breadcrumbs { margin-block-end: 28px; }
+.breadcrumbs ol { display: flex; align-items: center; flex-wrap: wrap; padding: 0; margin: 0; list-style: none; gap: 8px; font-size: .78rem; color: #5a7064; }
+.breadcrumbs li { display: inline-flex; gap: 8px; align-items: center; min-width: 0; }
+.breadcrumbs li svg { flex-shrink: 0; }
+.breadcrumbs [aria-current=page] { color: var(--green); font-weight: 600; }
+.back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-block-end: 16px; font-size: .82rem; font-weight: 600; }
+.editor-card { max-width: 880px; }
+.editor-card .form-grid > .field:first-child, .editor-card .form-grid > .field:has(textarea) { grid-column: 1 / -1; }
+.editor-card > .section-heading { padding-block-end: 24px; margin-block-end: 24px; border-block-end: 1px solid var(--border); }
+.editor-context { display: flex; align-items: center; gap: 14px; padding: 16px; margin-block-end: 24px; border-radius: 8px; background: #f0f4e9; }
+.editor-context svg { flex-shrink: 0; }
+.editor-context strong, .editor-context .small-label { display: block; }
+.editor-context .small-label { margin-block-end: 4px; font-size: .6rem; }
+.editor-context p { margin-block: 4px 0; }
+.roles-panel { margin-block-start: 32px; }
+.roles-panel > summary { cursor: pointer; min-height: 56px; padding: 22px 28px; font-size: .95rem; font-weight: 700; }
+.roles-panel summary span { display: block; margin-block: 8px 0; font-weight: 400; }
+.roles-panel > .card { border: 0; border-block-start: 1px solid var(--border); border-radius: 0; margin: 0; }
+.sign-in-state { padding: 40px; max-width: 720px; margin: 36px auto; }
+.app-main .loading { padding-block: 40px; }
+.toast-region { inset-block-start: 100px; }
+summary:focus-visible { outline: 3px solid #659966; outline-offset: -4px; }
+@media (max-width: 1050px) {
+  .header-inner { flex-wrap: wrap; gap: 12px; padding: 14px 24px; }
+  .mobile-toggle { display: inline-flex; margin-inline-start: auto; }
+  .account-control { margin-inline-start: 0; }
+  .site-navigation { display: none; width: 100%; flex: 1 0 100%; order: 4; flex-direction: column; align-items: stretch; padding-block-start: 10px; border-block-start: 1px solid var(--border); }
+  .site-navigation.is-open { display: flex; }
+  .public-account-links { margin: 8px 0 0; padding-block-start: 8px; border-block-start: 1px solid var(--border); }
+  .site-navigation > a { padding: 13px 16px; }
+}
+@media (max-width: 620px) {
+  .header-inner { padding: 12px 16px; min-height: 72px; gap: 8px; }
+  .site-header .brand { font-size: 1.25rem; gap: 8px; }
+  .site-header .brand-symbol { width: 30px; height: 32px; }
+  .mobile-toggle { padding: 10px; gap: 6px; }
+  .account-trigger { width: 44px; padding: 10px; }
+  .account-trigger > span, .account-trigger > svg:last-child { display: none; }
+  .app-main { padding: 28px 16px; }
+  .toast-region { inset-block-start: 84px; }
+  .page-intro { flex-direction: column; gap: 16px; }
+  .workspace-cards, .organization-grid { grid-template-columns: 1fr; gap: 16px; }
+  .workspace-welcome { padding: 24px; gap: 16px; }
+  .workspace-welcome > svg { display: none; }
+  .workspace-welcome p:last-child { font-size: .85rem; }
+  .destination-card { padding: 24px; }
+  .workspace-opportunities { flex-direction: column; align-items: flex-start; padding: 24px; }
+  .workspace-opportunities > div { align-items: flex-start; gap: 12px; }
+  .profile-navigation { gap: 0; }
+  .profile-navigation a { flex: 1; padding: 12px 8px; font-size: .76rem; text-align: center; }
+  .editor-card > .section-heading { flex-wrap: wrap; gap: 12px; }
+  .breadcrumbs { margin-block-end: 20px; }
+  .roles-panel > summary { padding: 20px; }
+  .sign-in-state { padding: 24px; margin-block: 16px; }
+}
