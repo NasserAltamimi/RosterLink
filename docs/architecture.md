@@ -60,6 +60,8 @@ No premature models or empty future service layers were added. Liquipedia access
 
 ## Sprint 2 organizations and recruitment
 
+October 31 follow-up: opening forms now use a weekly day/time picker. Create/edit bodies require `scheduleSlots: [{day,start,end}]`; the server derives the display `schedule` string. The descriptive-schedule discussion below records the initial October 30 version and is superseded by this structured representation. One block per selected day, 15-minute choices, overnight sessions and an explicit IANA timezone are supported. Backend validation prevents duplicates, equal start/end times and overlapping blocks across days/week boundaries. Existing text-only records remain readable; the edit form displays their prior schedule and asks the manager to select structured days/times before saving. No old text is automatically interpreted or overwritten.
+
 `server/modules/recruitment/` owns organizations, teams, permissions and openings. `client/Recruitment.jsx` provides public pages/browsing and the management workspace, reusing API/session/CSRF, field/error/loading controls, toast feedback and existing styling. There is no second account system or global manager flag.
 
 | Method | Endpoint | Access and behavior |

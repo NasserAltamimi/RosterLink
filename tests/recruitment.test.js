@@ -16,9 +16,9 @@ import { Organization, Team, Opening, recruitmentModels } from '../server/module
 const password = 'Sprint Two test passphrase!';
 const orgValues = { name: 'Falcons', description: 'Competitive esports organization — فريق', region: 'Saudi Arabia', website: 'https://example.com' };
 const teamValues = { name: 'Falcons Rocket League', description: 'Our first game team.' };
-const openingValues = { role: 'Rotation player', requirements: 'Rocket League: competitive 3v3 rotation and replay review.', platform: 'PC', rank: 'Champion or equivalent', region: 'Middle East', language: 'Arabic / English', schedule: 'Sun–Thu 20:00–23:00', timezone: 'Asia/Riyadh', deadline: '2099-11-04T23:59:00+03:00' };
+const openingValues = { role: 'Rotation player', requirements: 'Rocket League: competitive 3v3 rotation and replay review.', platform: 'PC', rank: 'Champion or equivalent', region: 'Middle East', language: 'Arabic / English', scheduleSlots: [{ day: 'sun', start: '20:00', end: '23:00' }], timezone: 'Asia/Riyadh', deadline: '2099-11-04T23:59:00+03:00' };
 const identifier = z.string().regex(/^[a-f\d]{24}$/);
-const openingDTO = z.object({ id: identifier, team: identifier, game: identifier, role: z.string(), requirements: z.string(), platform: z.string(), rank: z.string(), region: z.string(), language: z.string(), schedule: z.string(), timezone: z.string(), deadline: z.iso.datetime(), status: z.enum(['active', 'closed']), createdAt: z.iso.datetime(), updatedAt: z.iso.datetime(), closedAt: z.iso.datetime().optional() }).strict();
+const openingDTO = z.object({ id: identifier, team: identifier, game: identifier, role: z.string(), requirements: z.string(), platform: z.string(), rank: z.string(), region: z.string(), language: z.string(), schedule: z.string(), scheduleSlots: z.array(z.object({ day: z.string(), start: z.string(), end: z.string() }).strict()), timezone: z.string(), deadline: z.iso.datetime(), status: z.enum(['active', 'closed']), createdAt: z.iso.datetime(), updatedAt: z.iso.datetime(), closedAt: z.iso.datetime().optional() }).strict();
 let mongo, directory, app, config, owner, outsider, scoped, secondManager, visitor, game, otherGame, orgA, orgB, teamA, sibling, teamB;
 const write = (actor, method, path, values) => actor.agent[method](`/api${path}`).set('X-CSRF-Token', actor.token).send(values);
 const get = path => request(app).get(`/api${path}`);
@@ -135,6 +135,27 @@ test('SF-20 invalid requirements/deadlines and injected game/status/team cannot 
   for (const values of [{ role: ' ' }, { game: otherGame.id }, { deadline: '2020-01-01T00:00:00Z' }]) await write(owner, 'put', `/openings/${opening.id}`, { ...openingValues, ...values }).expect(400);
   await write(owner, 'post', `/openings/${opening.id}/close`, { status: 'active' }).expect(400);
   await get('/openings/bad').expect(404); await write(owner, 'put', `/openings/${new mongoose.Types.ObjectId()}`, openingValues).expect(404);
+});
+
+test('SF-20 structured schedules persist, reject invalid/overlapping slots, and preserve old text records', async () => {
+  const slots = [{ day: 'fri', start: '22:00', end: '02:00' }, { day: 'sun', start: '20:15', end: '23:45' }];
+  const opening = await createOpening(owner, teamA, { ...openingValues, scheduleSlots: slots });
+  assert.equal(opening.schedule, 'Sun 20:15–23:45; Fri 22:00–02:00 (+1 day)');
+  assert.deepEqual(opening.scheduleSlots, [slots[1], slots[0]]);
+  assert.deepEqual((await get(`/openings/${opening.id}`)).body.opening.scheduleSlots, opening.scheduleSlots);
+  const invalid = [[], null, 'Sun 8pm', [{ day: 'noday', start: '20:00', end: '23:00' }], [{ day: 'sun', start: '25:00', end: '23:00' }], [{ day: 'sun', start: '20:01', end: '23:00' }], [{ day: 'sun', start: '20:00', end: '20:00' }], [slots[0], slots[0]], [{ ...slots[0], extra: 'bad' }], [{ day: 'sat', start: '23:00', end: '02:00' }, { day: 'sun', start: '01:00', end: '03:00' }]];
+  for (const scheduleSlots of invalid) {
+    await write(owner, 'post', `/teams/${teamA.id}/openings`, { ...openingValues, scheduleSlots }).expect(400);
+    await write(owner, 'put', `/openings/${opening.id}`, { ...openingValues, scheduleSlots }).expect(400);
+  }
+  const { scheduleSlots, ...withoutSchedule } = openingValues;
+  await write(owner, 'post', `/teams/${teamA.id}/openings`, withoutSchedule).expect(400);
+  await write(owner, 'post', `/teams/${teamA.id}/openings`, { ...withoutSchedule, schedule: 'Sunday whenever' }).expect(400);
+  const legacy = await Opening.create({ ...withoutSchedule, schedule: 'Old Friday evening text', team: teamA.id, game: game.id, createdBy: owner.id, updatedBy: owner.id });
+  assert.equal((await get(`/openings/${legacy.id}`)).body.opening.schedule, 'Old Friday evening text');
+  await write(owner, 'put', `/openings/${legacy.id}`, openingValues).expect(200);
+  const updated = (await get(`/openings/${legacy.id}`)).body.opening;
+  assert.equal(updated.schedule, 'Sun 20:00–23:00'); assert.deepEqual(updated.scheduleSlots, openingValues.scheduleSlots);
 });
 
 test('SF-21 active filtering combines literal game/role/region/language and excludes closed/expired', async () => {

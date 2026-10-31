@@ -6,6 +6,7 @@ import { User } from '../auth/model.js';
 import { Game } from '../games/model.js';
 import { HttpError, parse } from '../../lib/errors.js';
 import { platforms } from '../../../shared/game-form.js';
+import { scheduleDays, scheduleTimes, sortSchedule, formatSchedule, scheduleOverlaps } from '../../../shared/schedule.js';
 
 const id = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid identifier.');
 const text = max => z.string().trim().min(1, 'This field is required.').max(max);
@@ -13,11 +14,15 @@ const orgValues = z.object({ name: text(100), description: text(2000), region: t
   website: z.union([z.literal(''), z.url().max(500).refine(value => /^https?:\/\//i.test(value), 'Use an HTTP or HTTPS URL.')]).default(''),
 }).strict();
 const teamValues = z.object({ name: text(100), description: text(2000), gameId: id }).strict();
+const scheduleSlots = z.array(z.object({ day: z.enum(scheduleDays.map(([day]) => day)), start: z.enum(scheduleTimes), end: z.enum(scheduleTimes) }).strict()).min(1, 'Select at least one playing day.').max(7)
+  .refine(slots => new Set(slots.map(slot => slot.day)).size === slots.length, 'Choose each day only once.')
+  .refine(slots => slots.every(slot => slot.start !== slot.end), 'Start and end times must be different.')
+  .refine(slots => !scheduleOverlaps(slots), 'Playing times cannot overlap across days.');
 const openingValues = z.object({ role: text(100), requirements: text(2000), platform: z.enum(platforms), rank: z.string().trim().max(100).default(''),
-  region: text(100), language: text(100), schedule: text(300),
+  region: text(100), language: text(100), scheduleSlots,
   timezone: text(100).refine(value => { try { new Intl.DateTimeFormat('en', { timeZone: value }); return true; } catch { return false; } }, 'Use a valid timezone, e.g. Asia/Riyadh.'),
   deadline: z.iso.datetime({ offset: true }).refine(value => new Date(value).getTime() > Date.now(), 'Choose a future deadline.'),
-}).strict();
+}).strict().transform(values => ({ ...values, scheduleSlots: sortSchedule(values.scheduleSlots), schedule: formatSchedule(values.scheduleSlots) }));
 const has = (list, user) => list.some(value => String(value) === String(user));
 const clean = doc => { const { _id, __v, managers, createdBy, updatedBy, closedBy, ...values } = doc.toObject ? doc.toObject() : doc; return { id: String(_id), ...values }; };
 const get = async (Model, value) => { if (!id.safeParse(value).success) throw new HttpError(404, 'Page not found.'); const doc = await Model.findById(value); if (!doc) throw new HttpError(404, 'Page not found.'); return doc; };

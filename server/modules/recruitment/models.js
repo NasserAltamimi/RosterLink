@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { scheduleDays, scheduleTimes } from '../../../shared/schedule.js';
 
 const ref = model => ({ type: mongoose.Schema.Types.ObjectId, ref: model, required: true });
 const text = max => ({ type: String, required: true, trim: true, maxlength: max });
@@ -21,6 +22,7 @@ export const Opening = mongoose.model('Opening', new mongoose.Schema({
   game: { ...ref('Game'), immutable: true },
   role: text(100), requirements: text(2000), platform: text(40), rank: { type: String, maxlength: 100, default: '' },
   region: text(100), language: text(100), schedule: text(300), timezone: text(100),
+  scheduleSlots: { type: [new mongoose.Schema({ day: { type: String, enum: scheduleDays.map(([day]) => day), required: true }, start: { type: String, enum: scheduleTimes, required: true }, end: { type: String, enum: scheduleTimes, required: true } }, { _id: false, strict: 'throw' })], default: undefined },
   deadline: { type: Date, required: true },
   status: { type: String, enum: ['active', 'closed'], default: 'active', required: true },
   createdBy: ref('User'), updatedBy: ref('User'), closedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, closedAt: Date,

@@ -17,7 +17,12 @@ async function fillOrg(page, name) {
 }
 async function fillOpening(page, role) {
   await page.getByLabel('Platform', { exact: false }).selectOption('PC');
-  for (const [label, value] of [['Role', role], ['Game-specific requirements', 'Rocket League 3v3 rotation, replay reviews, and reliable communication.'], ['Minimum rank / context', 'Champion II or equivalent'], ['Region', 'Middle East'], ['Language', 'Arabic / English'], ['Schedule', 'Sun–Thu 20:00–23:00'], ['Schedule timezone', 'Asia/Riyadh'], ['Deadline', futureLocal]]) await page.getByLabel(label === 'Schedule' ? /^Schedule(?:\s*\*)?$/ : label).fill(value);
+  for (const [label, value] of [['Role', role], ['Game-specific requirements', 'Rocket League 3v3 rotation, replay reviews, and reliable communication.'], ['Minimum rank / context', 'Champion II or equivalent'], ['Region', 'Middle East'], ['Language', 'Arabic / English'], ['Schedule timezone', 'Asia/Riyadh'], ['Deadline', futureLocal]]) await page.getByLabel(label).fill(value);
+  await page.getByRole('checkbox', { name: 'Sunday', exact: true }).check();
+  await page.getByLabel('Sunday end time', { exact: true }).selectOption('23:15');
+  await page.getByRole('checkbox', { name: 'Friday', exact: true }).check();
+  await page.getByLabel('Friday start time', { exact: true }).selectOption('22:00');
+  await page.getByLabel('Friday end time', { exact: true }).selectOption('02:00');
 }
 async function shot(page, name, testInfo) {
   await mkdir('docs/evidence/sprint-2', { recursive: true });
@@ -70,10 +75,15 @@ test('SF-14–21 UI create/edit organization and teams, scoped roles, publish/fi
     await scopedPage.getByRole('button', { name: 'New opening', exact: true }).click(); await fillOpening(scopedPage, roleName);
     await shot(scopedPage, 'opening-creation', testInfo);
     await scopedPage.getByRole('button', { name: 'Publish opening', exact: true }).click(); await expect(scopedPage.getByRole('heading', { name: roleName, exact: true })).toBeVisible();
-    await scopedPage.getByRole('button', { name: 'Edit opening', exact: true }).click(); await scopedPage.getByLabel('Game-specific requirements').fill('Updated Rocket League 3v3 requirements.'); await scopedPage.getByRole('button', { name: 'Save opening' }).click();
+    await scopedPage.getByRole('button', { name: 'Edit opening', exact: true }).click();
+    await expect(scopedPage.getByLabel('Sunday end time', { exact: true })).toHaveValue('23:15');
+    await expect(scopedPage.getByLabel('Friday end time', { exact: true })).toHaveValue('02:00');
+    await scopedPage.getByLabel('Game-specific requirements').fill('Updated Rocket League 3v3 requirements.'); await scopedPage.getByRole('button', { name: 'Save opening' }).click();
     await scopedPage.reload(); await expect(scopedPage.getByRole('heading', { name: roleName, exact: true })).toBeVisible();
     const saved = (await (await scopedPage.request.get('/api/management')).json()).openings.find(item => item.role === roleName);
     expect(saved.requirements).toBe('Updated Rocket League 3v3 requirements.'); expect(saved.game).toBe(team.game);
+    expect(saved.scheduleSlots).toEqual([{ day: 'sun', start: '20:00', end: '23:15' }, { day: 'fri', start: '22:00', end: '02:00' }]);
+    expect(saved.schedule).toBe('Sun 20:00–23:15; Fri 22:00–02:00 (+1 day)');
     // Public pages have no management form, including in an unrelated manager's session.
     const publicPage = await otherContext.newPage(); await publicPage.goto(`/organizations/${org.id}`);
     await expect(publicPage.getByText('Edited organization — persisted after login.', { exact: true })).toBeVisible(); await expect(publicPage.locator('form')).toHaveCount(0); await shot(publicPage, 'organization', testInfo);

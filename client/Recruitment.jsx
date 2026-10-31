@@ -3,10 +3,11 @@ import { api } from './api.js';
 import { Brand, Field, Loading, Notice, Submit } from './components.jsx';
 import { useToast } from './Toasts.jsx';
 import { platforms } from '../shared/game-form.js';
+import SchedulePicker from './SchedulePicker.jsx';
 
 const orgFields = [['name', 'Organization name', 100], ['description', 'About the organization', 2000, 'textarea'], ['region', 'Organization region', 100], ['website', 'Website (optional)', 500, 'url']];
 const teamFields = [['name', 'Team name', 100], ['description', 'About the team', 2000, 'textarea']];
-const openingFields = [['role', 'Role', 100], ['requirements', 'Game-specific requirements', 2000, 'textarea'], ['rank', 'Minimum rank / context (optional)', 100], ['region', 'Region', 100], ['language', 'Language', 100], ['schedule', 'Schedule', 300], ['timezone', 'Schedule timezone', 100], ['deadline', 'Deadline', null, 'datetime-local']];
+const openingFields = [['role', 'Role', 100], ['requirements', 'Game-specific requirements', 2000, 'textarea'], ['rank', 'Minimum rank / context (optional)', 100], ['region', 'Region', 100], ['language', 'Language', 100], ['timezone', 'Schedule timezone', 100], ['deadline', 'Deadline', null, 'datetime-local']];
 const deadlineLocal = value => { if (!value) return ''; const date = new Date(value); return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
 
 function useResource(path) {
@@ -31,17 +32,19 @@ function Editor({ title, fields, initial = {}, extra, path, method = 'POST', onS
   const notify = useToast();
   const [values, setValues] = useState(() => ({ ...Object.fromEntries(fields.map(([key]) => [key, ''])), ...initial, ...(opening ? { deadline: deadlineLocal(initial.deadline), timezone: initial.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone, platform: initial.platform || '' } : {}) }));
   const [busy, setBusy] = useState(false), [error, setError] = useState(null);
+  const [scheduleSlots, setScheduleSlots] = useState(initial.scheduleSlots || []);
   const change = (key, value) => setValues(previous => ({ ...previous, [key]: value }));
   async function submit(event) {
     event.preventDefault(); setBusy(true); setError(null);
     try {
-      const body = { ...values, ...extra };
-      if (opening) body.deadline = new Date(values.deadline).toISOString();
+      const { schedule: legacySchedule, scheduleSlots: previousSlots, ...body } = { ...values, ...extra };
+      if (opening) { body.deadline = new Date(values.deadline).toISOString(); body.scheduleSlots = scheduleSlots; }
       const result = await api(path, { method, body }); notify(`${title} saved.`); onSaved(result);
     } catch (error) { setError(error); } finally { setBusy(false); }
   }
   return <form className="card form-card" onSubmit={submit}><h3>{title}</h3>{children}<Notice error={error} /><fieldset disabled={busy} className="recruitment-fieldset">
     {opening && <Field label="Platform" as="select" value={values.platform} onChange={event => change('platform', event.target.value)} error={error?.fields?.platform} required><option value="">Choose platform</option>{platforms.map(platform => <option key={platform}>{platform}</option>)}</Field>}
+    {opening && <SchedulePicker value={scheduleSlots} onChange={setScheduleSlots} errors={error?.fields} legacy={initial.schedule} />}
     <div className="form-grid">{fields.map(([key, label, maxLength, type]) => <Field key={key} label={label} as={type === 'textarea' ? 'textarea' : 'input'} type={type === 'textarea' ? undefined : type || 'text'} maxLength={maxLength || undefined} dir={type === 'datetime-local' ? undefined : 'auto'} value={values[key] ?? ''} required={!['website', 'rank'].includes(key)} onChange={event => change(key, event.target.value)} error={error?.fields?.[key]} help={key === 'deadline' ? 'Enter your local date and time. Saved as an exact UTC instant.' : key === 'schedule' ? 'Include days and times; the timezone below applies.' : key === 'timezone' ? 'IANA timezone, e.g. Asia/Riyadh.' : undefined} />)}</div>
     <Submit busy={busy}>{button}</Submit></fieldset></form>;
 }
@@ -100,7 +103,7 @@ function OpeningManager({ team, openings, reload }) {
     catch (error) { setError(error); } finally { setBusy(false); }
   }
   return <><div className="section-heading"><h3>Openings · {team.name}</h3><button className="button secondary" onClick={() => setEditing({})}>New opening</button></div><Notice error={error} />
-    {editing && <><Editor key={editing.id || 'new'} title={editing.id ? 'Edit opening' : 'Publish opening'} fields={openingFields} initial={Object.fromEntries(openingFields.map(([key]) => [key, editing[key] || '']).concat([['platform', editing.platform || '']]))} opening path={editing.id ? `/openings/${editing.id}` : `/teams/${team.id}/openings`} method={editing.id ? 'PUT' : 'POST'} button={editing.id ? 'Save opening' : 'Publish opening'} onSaved={() => { setEditing(null); reload(); }}><p>Team: {team.name} · Game: {team.gameName} (derived from team)</p></Editor><button className="text-button" onClick={() => setEditing(null)}>Cancel opening edit</button></>}
+    {editing && <><Editor key={editing.id || 'new'} title={editing.id ? 'Edit opening' : 'Publish opening'} fields={openingFields} initial={{ ...Object.fromEntries(openingFields.map(([key]) => [key, editing[key] || '']).concat([['platform', editing.platform || '']])), schedule: editing.schedule, scheduleSlots: editing.scheduleSlots }} opening path={editing.id ? `/openings/${editing.id}` : `/teams/${team.id}/openings`} method={editing.id ? 'PUT' : 'POST'} button={editing.id ? 'Save opening' : 'Publish opening'} onSaved={() => { setEditing(null); reload(); }}><p>Team: {team.name} · Game: {team.gameName} (derived from team)</p></Editor><button className="text-button" onClick={() => setEditing(null)}>Cancel opening edit</button></>}
     {openings.length ? openings.map(opening => <article className="card form-card" key={opening.id}><h3>{opening.role}</h3><p>{opening.status === 'closed' ? 'Closed' : opening.expired ? 'Expired' : 'Active'} · {opening.language} · {opening.region}</p><a href={`/openings/${opening.id}`}>View opening</a>{opening.status !== 'closed' && <div className="heading-actions"><button className="button secondary" onClick={() => setEditing(opening)}>Edit opening</button><button className="button secondary danger" disabled={busy} onClick={() => close(opening)}>Close opening</button></div>}</article>) : <p>No openings yet.</p>}</>;
 }
 
