@@ -3,6 +3,7 @@ import { api } from './api.js';
 import { Brand, Field, Loading, Notice, Submit } from './components.jsx';
 import { useToast } from './Toasts.jsx';
 import { platforms } from '../shared/game-form.js';
+import { describeFilters } from '../shared/opening-filters.js';
 import SchedulePicker from './SchedulePicker.jsx';
 
 const orgFields = [['name', 'Organization name', 100], ['description', 'About the organization', 2000, 'textarea'], ['region', 'Organization region', 100], ['website', 'Website (optional)', 500, 'url']];
@@ -56,11 +57,13 @@ function OpeningCard({ opening }) {
 function Browse() {
   const [filters, setFilters] = useState({ game: '', role: '', region: '', language: '' });
   const [query, setQuery] = useState('');
+  const [applied, setApplied] = useState({});
   const catalog = useResource('/games'), result = useResource(`/openings${query}`);
-  function filter(event) { event.preventDefault(); setQuery(`?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value.trim()))}`); }
+  const appliedText = describeFilters(applied, catalog.data?.games);
+  function filter(event) { event.preventDefault(); setApplied(filters); setQuery(`?${new URLSearchParams(Object.entries(filters).filter(([, value]) => value.trim()))}`); }
   return <><p className="eyebrow">FIND YOUR NEXT TEAM</p><h1>Recruitment openings</h1><p className="muted">Active opportunities from organizations. Deadlines are displayed in your local time.</p>
-    <form className="card form-card" onSubmit={filter}><h2>Filter openings</h2><ResourceState resource={catalog}><div className="form-grid"><Field label="Game" as="select" value={filters.game} onChange={event => setFilters({ ...filters, game: event.target.value })}><option value="">All games</option>{catalog.data?.games.map(game => <option value={game._id} key={game._id}>{game.name}</option>)}</Field>{['role', 'region', 'language'].map(key => <Field key={key} label={key[0].toUpperCase() + key.slice(1)} maxLength={100} value={filters[key]} onChange={event => setFilters({ ...filters, [key]: event.target.value })} />)}</div><button className="button primary">Apply filters</button> <button className="button secondary" type="button" onClick={() => { setFilters({ game: '', role: '', region: '', language: '' }); setQuery(''); }}>Clear filters</button></ResourceState></form>
-    <ResourceState resource={result}><p role="status">{result.data?.openings.length || 0} active openings</p>{result.data?.openings.length ? result.data.openings.map(opening => <OpeningCard key={opening.id} opening={opening} />) : <section className="card form-card"><h2>No active openings found.</h2><p>Try changing your filters or check back later.</p></section>}</ResourceState></>;
+    <form className="card form-card" onSubmit={filter}><h2>Filter openings</h2><ResourceState resource={catalog}><div className="form-grid"><Field label="Game" as="select" value={filters.game} onChange={event => setFilters({ ...filters, game: event.target.value })}><option value="">All games</option>{catalog.data?.games.map(game => <option value={game._id} key={game._id}>{game.name}</option>)}</Field>{['role', 'region', 'language'].map(key => <Field key={key} label={key[0].toUpperCase() + key.slice(1)} maxLength={100} value={filters[key]} onChange={event => setFilters({ ...filters, [key]: event.target.value })} />)}</div><button className="button primary">Apply filters</button> <button className="button secondary" type="button" disabled={!describeFilters(filters) && !appliedText} onClick={() => { setFilters({ game: '', role: '', region: '', language: '' }); setApplied({}); setQuery(''); }}>Clear filters</button></ResourceState></form>
+    <ResourceState resource={result}><p role="status">{result.data?.openings.length || 0} active openings</p>{appliedText && <p className="muted">Filtered by {appliedText}</p>}{result.data?.openings.length ? result.data.openings.map(opening => <OpeningCard key={opening.id} opening={opening} />) : <section className="card form-card"><h2>No active openings found.</h2><p>Try changing your filters or check back later.</p></section>}</ResourceState></>;
 }
 
 function PublicPage({ kind, id }) {
