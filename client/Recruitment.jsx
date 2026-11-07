@@ -6,6 +6,7 @@ import useResource from './useResource.js';
 import { navigate } from './navigation.js';
 import { useToast } from './Toasts.jsx';
 import { platforms } from '../shared/game-form.js';
+import { describeFilters } from '../shared/opening-filters.js';
 import SchedulePicker from './SchedulePicker.jsx';
 
 const orgFields = [['name', 'Organization name', 100], ['description', 'About the organization', 2000, 'textarea'], ['region', 'Organization region', 100], ['website', 'Website (optional)', 500, 'url']];
@@ -48,11 +49,13 @@ function OpeningCard({ opening }) {
 function Browse({ search }) {
   const [filters, setFilters] = useState(() => Object.fromEntries(['game', 'role', 'region', 'language'].map(key => [key, new URLSearchParams(search).get(key) || ''])));
   const query = search;
+  const applied = Object.fromEntries(new URLSearchParams(search));
   const catalog = useResource('/games'), result = useResource(`/openings${query}`);
+  const appliedText = describeFilters(applied, catalog.data?.games);
   function filter(event) { event.preventDefault(); const query = new URLSearchParams(Object.entries(filters).map(([key, value]) => [key, value.trim()]).filter(([, value]) => value)); navigate(`/openings${query.size ? '?' + query : ''}`); }
   return <><p className="eyebrow">FIND YOUR NEXT TEAM</p><h1>Recruitment openings</h1><p className="muted">Active opportunities from organizations. Deadlines are displayed in your local time.</p>
-    <form className="card form-card" onSubmit={filter}><h2>Filter openings</h2><ResourceState resource={catalog}><div className="form-grid"><Field label="Game" as="select" value={filters.game} onChange={event => setFilters({ ...filters, game: event.target.value })}><option value="">All games</option>{catalog.data?.games.map(game => <option value={game._id} key={game._id}>{game.name}</option>)}</Field>{['role', 'region', 'language'].map(key => <Field key={key} label={key[0].toUpperCase() + key.slice(1)} maxLength={100} value={filters[key]} onChange={event => setFilters({ ...filters, [key]: event.target.value })} />)}</div><div className="heading-actions"><button className="button primary">Apply filters</button><button className="button secondary" type="button" onClick={() => { setFilters({ game: '', role: '', region: '', language: '' }); navigate('/openings'); }}>Clear filters</button></div></ResourceState></form>
-    <ResourceState resource={result}><p role="status">{result.data?.openings.length || 0} active openings</p>{result.data?.openings.length ? result.data.openings.map(opening => <OpeningCard key={opening.id} opening={opening} />) : <section className="card form-card"><h2>No active openings found.</h2><p>Try changing your filters or check back later.</p></section>}</ResourceState></>;
+    <form className="card form-card" onSubmit={filter}><h2>Filter openings</h2><ResourceState resource={catalog}><div className="form-grid"><Field label="Game" as="select" value={filters.game} onChange={event => setFilters({ ...filters, game: event.target.value })}><option value="">All games</option>{catalog.data?.games.map(game => <option value={game._id} key={game._id}>{game.name}</option>)}</Field>{['role', 'region', 'language'].map(key => <Field key={key} label={key[0].toUpperCase() + key.slice(1)} maxLength={100} value={filters[key]} onChange={event => setFilters({ ...filters, [key]: event.target.value })} />)}</div><div className="heading-actions"><button className="button primary">Apply filters</button><button className="button secondary" type="button" disabled={!describeFilters(filters) && !appliedText} onClick={() => { setFilters({ game: '', role: '', region: '', language: '' }); navigate('/openings'); }}>Clear filters</button></div></ResourceState></form>
+    <ResourceState resource={result}><p role="status">{result.data?.openings.length || 0} active openings</p>{appliedText && <p className="muted">Filtered by {appliedText}</p>}{result.data?.openings.length ? result.data.openings.map(opening => <OpeningCard key={opening.id} opening={opening} />) : <section className="card form-card"><h2>No active openings found.</h2><p>Try changing your filters or check back later.</p></section>}</ResourceState></>;
 }
 
 function PublicPage({ kind, id }) {
