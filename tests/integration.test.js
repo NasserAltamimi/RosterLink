@@ -16,6 +16,7 @@ import { syncPandaScoreGames } from '../server/modules/games/pandascore.js';
 import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from './fixtures/competition-provider.js';
 import { edgeDetails, legacyLanguage } from './fixtures/profile-edge-cases.js';
+import { defaultPublicFields, publicFieldKeys, resolvePrivacy } from '../shared/profile-privacy.js';
 
 const details = { platform: 'PC', rank: 'Champion II', server: 'Middle East', language: 'Arabic, English', availability: 'Sun–Thu 20:00–23:00 Asia/Riyadh; tryouts Fri' };
 const profileValues = { displayName: 'PilotPlayer', bio: 'Ready to learn and compete.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] };
@@ -374,6 +375,117 @@ test('SF-13: a shared profile link is readable without login, exposes only publi
   await request(app).get(path).expect(401);
   await request(app).put(publicPath).send(profileValues).expect(403);
 });
+
+const settingsPath = profile => `/api/profiles/${profile.id}/settings`;
+const allHidden = Object.fromEntries(publicFieldKeys.map(key => [key, false]));
+const tournament = { name: 'Regional Cup', edition: '2026', placement: 'Top 8' };
+// Each SF-08 test gets its own app, so its sign-ups have their own auth rate-limit budget (as in the SF-06 test).
+async function sf08Test(run) {
+  const application = createApp(config);
+  const visit = async () => {
+    const agent = request.agent(application);
+    const result = await agent.get('/api/auth/session').expect(200);
+    return { agent, token: result.body.csrfToken };
+  };
+  const signUp = async () => {
+    const user = await visit(), email = newEmail();
+    const result = await user.agent.post('/api/auth/register').set('X-CSRF-Token', user.token).send({ email, password }).expect(201);
+    return { ...user, token: result.body.csrfToken, email, id: result.body.user.id };
+  };
+  try { await run({ application, visit, signUp }); } finally { await application.locals.sessionStore.close(); }
+}
+
+test('SF-08: a profile saved before SF-08 resolves to defaults everywhere, including lean queries', () => sf08Test(async ({ application, signUp }) => {
+  const user = await signUp(); const profile = await createProfile(user);
+  // Simulate a document written before the feature existed.
+  await PlayerProfile.collection.updateOne({ _id: new mongoose.Types.ObjectId(profile.id) }, { $unset: { openToOffers: '', publicFields: '' } });
+  const raw = await PlayerProfile.collection.findOne({ _id: new mongoose.Types.ObjectId(profile.id) });
+  assert.equal(raw.openToOffers, undefined); assert.equal(raw.publicFields, undefined);
+  assert.deepEqual(resolvePrivacy(await PlayerProfile.findById(profile.id).lean()), { openToOffers: false, publicFields: defaultPublicFields });
+  const me = (await user.agent.get('/api/profiles/me').expect(200)).body.profile;
+  assert.equal(me.openToOffers, false);
+  assert.deepEqual(me.publicFields, defaultPublicFields);
+  const shared = (await request(application).get(`/api/public/profiles/${profile.id}`).expect(200)).body.profile;
+  assert.deepEqual(Object.keys(shared).sort(), ['bio', 'displayName', 'headerImageUrl', 'id', 'languages', 'openToOffers', 'profileImageUrl', 'region']);
+  assert.equal(shared.openToOffers, false);
+  assert.equal(await PlayerProfile.countDocuments({ _id: profile.id, openToOffers: true }), 0);
+  // A new profile stores the defaults explicitly.
+  const fresh = await createProfile(await signUp());
+  assert.deepEqual(resolvePrivacy(await PlayerProfile.findById(fresh.id).lean()), { openToOffers: false, publicFields: defaultPublicFields });
+}));
+
+test('SF-08: the owner updates settings partially, sees every field, and settings persist after a new login', () => sf08Test(async ({ visit, signUp }) => {
+  const user = await signUp(); const profile = await createProfile(user);
+  await PlayerProfile.collection.updateOne({ _id: new mongoose.Types.ObjectId(profile.id) }, { $unset: { publicFields: '' } });
+  const first = await user.agent.patch(settingsPath(profile)).set('X-CSRF-Token', user.token).send({ openToOffers: true, publicFields: { bio: false } }).expect(200);
+  assert.equal(first.body.profile.openToOffers, true);
+  assert.deepEqual(first.body.profile.publicFields, { ...defaultPublicFields, bio: false });
+  const second = await user.agent.patch(settingsPath(profile)).set('X-CSRF-Token', user.token).send({ publicFields: { rank: false } }).expect(200);
+  assert.deepEqual(second.body.profile.publicFields, { ...defaultPublicFields, bio: false, rank: false }, 'omitted keys keep their saved value');
+  assert.equal(second.body.profile.openToOffers, true);
+  assert.equal(second.body.profile.bio, profileValues.bio, 'the owner still receives hidden fields');
+  assert.equal(await PlayerProfile.countDocuments({ _id: profile.id, openToOffers: true }), 1);
+  await user.agent.post('/api/auth/logout').set('X-CSRF-Token', user.token).expect(204);
+  const fresh = await visit();
+  await fresh.agent.post('/api/auth/login').set('X-CSRF-Token', fresh.token).send({ email: user.email, password }).expect(200);
+  const me = (await fresh.agent.get('/api/profiles/me').expect(200)).body.profile;
+  assert.equal(me.openToOffers, true);
+  assert.deepEqual(me.publicFields, { ...defaultPublicFields, bio: false, rank: false });
+}));
+
+test('SF-08: settings reject anonymous users, other players, unknown keys and non-Boolean values', () => sf08Test(async ({ application, visit, signUp }) => {
+  const owner = await signUp(); const profile = await createProfile(owner); const other = await signUp();
+  const path = settingsPath(profile);
+  const anonymous = await visit();
+  await anonymous.agent.patch(path).set('X-CSRF-Token', anonymous.token).send({ openToOffers: true }).expect(401);
+  await request(application).patch(path).send({ openToOffers: true }).expect(403);
+  await other.agent.patch(path).set('X-CSRF-Token', other.token).send({ openToOffers: true }).expect(404);
+  const cases = [
+    [{ openToOffers: true, owner: other.id }, /Unknown setting: owner/],
+    [{ publicFields: { email: true } }, /Unknown setting: email/],
+    [{ publicFields: { passwordHash: true } }, /Unknown setting: passwordHash/],
+    [{ openToOffers: 'yes' }, /openToOffers must be true or false/],
+    [{ publicFields: { bio: 0 } }, /publicFields\.bio must be true or false/],
+    [{ publicFields: { rank: null } }, /publicFields\.rank must be true or false/],
+    [{}, /at least one setting/],
+    [[true], /JSON object/],
+  ];
+  for (const [body, message] of cases) {
+    const rejected = await owner.agent.patch(path).set('X-CSRF-Token', owner.token).send(body).expect(400);
+    assert.match(rejected.body.message, message, JSON.stringify(body));
+  }
+  const stored = resolvePrivacy(await PlayerProfile.findById(profile.id).lean());
+  assert.deepEqual(stored, { openToOffers: false, publicFields: defaultPublicFields }, 'rejected requests change nothing');
+}));
+
+test('SF-08: the public endpoint omits hidden fields, hidden images and tournament experience', () => sf08Test(async ({ application, signUp }) => {
+  const owner = await signUp(); const profile = await createProfile(owner);
+  const path = `/api/profiles/${profile.id}`, publicPath = `/api/public/profiles/${profile.id}`;
+  await owner.agent.post(`${path}/games`).set('X-CSRF-Token', owner.token).send({ gameId: game.id, details, experience: [tournament] }).expect(201);
+  for (const kind of ['profile', 'header']) await owner.agent.post(`${path}/images/${kind}`).set('X-CSRF-Token', owner.token).attach('image', image, { filename: 'a.png', contentType: 'image/png' }).expect(200);
+  const visible = (await request(application).get(publicPath).expect(200)).body;
+  const imageUrl = visible.profile.profileImageUrl;
+  await request(application).get(imageUrl).expect(200);
+  assert.equal(visible.sections[0].experience[0].name, tournament.name);
+
+  await owner.agent.patch(settingsPath(profile)).set('X-CSRF-Token', owner.token).send({ openToOffers: true, publicFields: allHidden }).expect(200);
+  const hidden = (await request(application).get(publicPath).expect(200)).body;
+  assert.deepEqual(hidden.profile, { id: profile.id, displayName: profileValues.displayName, openToOffers: true });
+  assert.deepEqual(hidden.sections, [{ gameId: game.id, details: {} }]);
+  const serialized = JSON.stringify(hidden);
+  for (const value of [profileValues.bio, profileValues.region, 'Arabic', 'Champion II', 'Sun–Thu', tournament.name, 'publicFields']) assert.ok(!serialized.includes(value), `${value} must be hidden`);
+  for (const kind of ['profile', 'header']) await request(application).get(`${publicPath}/images/${kind}`).expect(404);
+
+  // Each toggle works on its own: hiding only rank removes only rank.
+  await owner.agent.patch(settingsPath(profile)).set('X-CSRF-Token', owner.token).send({ openToOffers: false, publicFields: { ...defaultPublicFields, rank: false } }).expect(200);
+  const partial = (await request(application).get(publicPath).expect(200)).body;
+  assert.equal(partial.profile.openToOffers, false);
+  assert.equal(partial.profile.bio, profileValues.bio);
+  assert.deepEqual(Object.keys(partial.sections[0].details).sort(), ['availability', 'language', 'platform', 'server']);
+  assert.equal(partial.sections[0].experience.length, 1);
+  const me = (await owner.agent.get(path).expect(200)).body;
+  assert.equal(me.sections[0].details.rank, 'Champion II', 'the owner still sees hidden game fields');
+}));
 
 test('TF-03 / SF-02 / SF-04–07: account, session, profile, game and both images survive MongoDB and app restart', { timeout: 60000 }, async () => {
   const user = await register(); const profile = await createProfile(user);
