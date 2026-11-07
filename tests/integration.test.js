@@ -363,7 +363,7 @@ test('SF-13: a shared profile link is readable without login, exposes only publi
   const shared = await request(app).get(publicPath).expect(200);
   assert.equal(shared.body.profile.displayName, profileValues.displayName);
   assert.equal(shared.body.sections[0].details.platform, 'PC');
-  assert.deepEqual(Object.keys(shared.body.profile).sort(), ['bio', 'displayName', 'headerImageUrl', 'id', 'languages', 'profileImageUrl', 'region']);
+  assert.deepEqual(Object.keys(shared.body.profile).sort(), ['bio', 'displayName', 'headerImageUrl', 'id', 'languages', 'openToOffers', 'profileImageUrl', 'region']);
   const serialized = JSON.stringify(shared.body);
   for (const secret of [owner.email, owner.id, 'owner', 'legacyDetails', 'passwordHash']) assert.ok(!serialized.includes(secret), `${secret} must not be public`);
   assert.match((await request(app).get(shared.body.profile.profileImageUrl).expect(200)).headers['content-type'], /image\/webp/);
