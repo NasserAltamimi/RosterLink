@@ -1,25 +1,26 @@
 import { useEffect, useState } from 'react';
 import { api } from './api.js';
-import { Brand, Loading, Notice } from './components.jsx';
+import { Loading, Notice } from './components.jsx';
 import { gameFields } from '../shared/game-form.js';
 
 // SF-13: read-only public player profile opened from a shared link (/p/<profileId>).
 export default function PublicProfile({ profileId }) {
   const [state, setState] = useState({ loading: true });
   useEffect(() => {
+    let active = true;
+    setState({ loading: true });
     if (!profileId) { setState({ error: { status: 404, message: 'Profile not found.' } }); return; }
     Promise.all([api(`/public/profiles/${profileId}`), api('/games')])
-      .then(([data, catalog]) => setState({ data, games: catalog.games }))
-      .catch(error => setState({ error }));
+      .then(([data, catalog]) => { if (active) setState({ data, games: catalog.games }); })
+      .catch(error => { if (active) setState({ error }); });
+    return () => { active = false; };
   }, [profileId]);
 
-  if (state.loading) return <main className="startup"><Brand /><Loading>Loading profile…</Loading></main>;
-  if (state.error) return <main className="startup"><Brand /><div className="card retry-card"><h1>{state.error.status === 404 ? 'Profile not found.' : 'Let’s reconnect.'}</h1><Notice error={state.error} /><a className="button primary" href="/">Go to RosterLink</a></div></main>;
+  if (state.loading) return <Loading>Loading profile…</Loading>;
+  if (state.error) return <div className="card retry-card"><h1>{state.error.status === 404 ? 'Profile not found.' : 'Let’s reconnect.'}</h1><Notice error={state.error} /><a className="button primary" href="/">Go to RosterLink</a></div>;
 
   const { profile, sections } = state.data;
   return <>
-    <header className="topbar"><Brand /><div className="topbar-right"><a className="button secondary compact" href="/">Open RosterLink</a></div></header>
-    <main className="main-content" id="main-content">
       <section className="card player-card">
         <div className="player-cover">{profile.headerImageUrl ? <img src={profile.headerImageUrl} alt="Player header" /> : <><span className="cover-word" aria-hidden="true">NEXT UP.</span><span className="cover-mark" aria-hidden="true">↗</span></>}</div>
         <div className="player-info"><div className="avatar">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="Player avatar" /> : <span>{profile.displayName.slice(0, 2).toUpperCase()}</span>}</div>
@@ -35,6 +36,5 @@ export default function PublicProfile({ profileId }) {
           {Boolean(section.experience.length) && <div className="experience-summary"><h4>Competitive experience · Self-reported</h4><p className="muted small">Competition metadata does not verify identity, participation, or results.</p><ul>{section.experience.map((entry, index) => <li key={index}><strong dir="auto">{entry.name}</strong> <span dir="auto">{entry.edition}{entry.stage && ` · ${entry.stage}`} · {entry.placement}</span></li>)}</ul></div>}
         </div></section>;
       }) : <section className="card empty-state"><h3>No games added yet.</h3></section>}
-    </main>
   </>;
 }

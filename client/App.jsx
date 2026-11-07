@@ -1,100 +1,82 @@
 import { useEffect, useState } from 'react';
 import { api, endSession } from './api.js';
+import { resolveRoute, safeReturnTo } from '../shared/navigation.js';
+import { publicProfileRoute } from '../shared/public-profile-route.js';
+import { navigate, useLocation } from './navigation.js';
 import Auth from './Auth.jsx';
-import ProfileForm from './ProfileForm.jsx';
-import Images from './Images.jsx';
-import Games from './Games.jsx';
-import { Brand, Loading, Notice } from './components.jsx';
-import { LegacyDetails } from './Experience.jsx';
-import { gameFields } from '../shared/game-form.js';
+import SiteHeader from './SiteHeader.jsx';
+import Workspace from './Workspace.jsx';
+import PlayerWorkspace from './PlayerWorkspace.jsx';
+import PublicProfile from './PublicProfile.jsx';
+import PasswordRecovery from './PasswordRecovery.jsx';
+import Recruitment from './Recruitment.jsx';
+import { Loading, Notice } from './components.jsx';
 import { useToast } from './Toasts.jsx';
 
-function Overview({ profile, sections, games, navigate }) {
-  const notify = useToast();
-  const [linkStatus, setLinkStatus] = useState(null);
-  async function copyLink() {
-    const link = `${location.origin}/p/${profile.id}`;
-    // The fallback stays inline because the player still needs to copy the link manually.
-    try { await navigator.clipboard.writeText(link); setLinkStatus(null); notify('Public link copied.'); }
-    catch { setLinkStatus(`Copy this link: ${link}`); }
-  }
-  return <>
-    <a className="skip-link" href="#main-content">Skip to content</a>
-    <section className="card player-card">
-      <div className="player-cover">{profile.headerImageUrl ? <img src={profile.headerImageUrl} alt="Your player header" /> : <><span className="cover-word" aria-hidden="true">NEXT UP.</span><span className="cover-mark" aria-hidden="true">↗</span></>}</div>
-      <div className="player-info"><div className="avatar">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="Your player avatar" /> : <span>{profile.displayName.slice(0, 2).toUpperCase()}</span>}</div>
-        <div className="player-heading"><div><p className="eyebrow">PLAYER PROFILE</p><h2 dir="auto">{profile.displayName}</h2><p className="muted" dir="auto">{profile.region} <span aria-hidden="true">·</span> {profile.languages.join(' / ')}</p></div><div className="heading-actions"><button className="button secondary" onClick={copyLink}>Copy public link</button><button className="button secondary" onClick={() => navigate('edit')}>Edit profile <span aria-hidden="true">↗</span></button></div></div>
-        {linkStatus && <Notice>{linkStatus}</Notice>}
-        <div className="player-bio"><h3>About</h3><p dir="auto">{profile.bio || 'Tell future teammates about your play style and goals. Add a bio to make this space yours.'}</p></div>
-      </div>
-    </section>
-    <div className="section-title"><div><p className="eyebrow">WHERE YOU COMPETE</p><h2>Game experience</h2></div><button className="text-button" onClick={() => navigate('games')}>Manage games ↗</button></div>
-    {sections.length ? sections.map(section => {
-      const game = games.find(game => game._id === section.gameId);
-      return <section className="card game-summary" key={section.id}><div className="game-monogram" aria-hidden="true">{game?.name.split(' ').map(word => word[0]).join('') || 'G'}</div><div className="game-summary-body"><div className="section-heading"><h3>{game?.name || 'Saved game'}</h3><span className="badge">Self-reported</span></div><dl className="game-details">{gameFields.filter(field => section.details[field.key]).map(field => <div key={field.key}><dt>{field.label}</dt><dd dir="auto">{section.details[field.key]}</dd></div>)}</dl>
-        {Boolean(section.experience?.length) && <div className="experience-summary"><h4>Competitive experience · Self-reported</h4><p className="muted small">Competition metadata does not verify identity, participation, or results.</p><ul>{section.experience.map((entry, index) => <li key={index}><strong dir="auto">{entry.name}</strong> <span dir="auto">{entry.edition}{entry.stage && ` · ${entry.stage}`} · {entry.placement}</span><p className="muted small">{entry.tournament || entry.competition ? 'Metadata: PandaScore' : 'Metadata: manual'} · Participation and results: self-reported</p></li>)}</ul></div>}
-        <LegacyDetails details={section.legacyDetails} />
-      </div></section>;
-    }) : <section className="card empty-state"><span className="empty-symbol" aria-hidden="true">＋</span><h3>Put your game on the map.</h3><p className="muted">Add your game experience, rank, and availability.</p><button className="button primary" onClick={() => navigate('games')}>Add your first game ↗</button></section>}
-  </>;
+function Redirect({ href }) {
+  useEffect(() => { navigate(href, { replace: true }); }, [href]);
+  return <Loading />;
+}
+
+function RecoveryPage() {
+  const [token] = useState(() => {
+    const secret = location.pathname === '/reset-password' ? location.hash.slice(1) : '';
+    if (secret) history.replaceState(null, '', location.pathname + location.search);
+    return secret;
+  });
+  return <PasswordRecovery token={token} />;
 }
 
 export default function App() {
+  const routeKey = useLocation(), path = routeKey.split('?')[0], route = resolveRoute(path);
+  const [session, setSession] = useState({ loading: true, user: null, error: null });
+  const [loggingOut, setLoggingOut] = useState(false), [logoutError, setLogoutError] = useState(null);
+  const [recoveryVisit, setRecoveryVisit] = useState(0);
   const notify = useToast();
-  const [user, setUser] = useState(null);
-  const [games, setGames] = useState([]);
-  const [data, setData] = useState({ profile: null, sections: [] });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [page, setPage] = useState('overview');
-  const [loggingOut, setLoggingOut] = useState(false);
-
   async function bootstrap() {
-    setLoading(true); setError(null);
-    try {
-      const [session, catalog] = await Promise.all([api('/auth/session'), api('/games')]);
-      setGames(catalog.games); setUser(session.user);
-      if (session.user) setData(await api('/profiles/me'));
-    } catch (error) { setError(error); }
-    finally { setLoading(false); }
+    setSession(previous => ({ ...previous, loading: true, error: null }));
+    try { const { user } = await api('/auth/session'); setSession({ user, loading: false, error: null }); }
+    catch (error) { setSession({ user: null, loading: false, error }); }
   }
   useEffect(() => {
     bootstrap();
-    const expired = () => { setUser(null); setData({ profile: null, sections: [] }); setPage('overview'); api('/auth/session').catch(() => {}); };
-    window.addEventListener('session-expired', expired);
-    return () => window.removeEventListener('session-expired', expired);
+    const expired = () => { setSession({ loading: false, user: null, error: null }); api('/auth/session').catch(() => {}); };
+    const hashChanged = () => { if (location.pathname === '/reset-password' && location.hash) setRecoveryVisit(value => value + 1); };
+    window.addEventListener('session-expired', expired); window.addEventListener('hashchange', hashChanged);
+    return () => { window.removeEventListener('session-expired', expired); window.removeEventListener('hashchange', hashChanged); };
   }, []);
-  async function authenticated(nextUser) {
-    const nextData = await api('/profiles/me');
-    setData(nextData); setUser(nextUser); setPage('overview'); setError(null);
+  useEffect(() => {
+    document.title = `${{ workspace: 'My Workspace', profile: 'My Profile', organizations: 'Organizations', management: 'Organization management', openings: 'Openings', auth: 'Account access' }[route.page] || 'RosterLink'} — RosterLink`;
+    window.scrollTo(0, 0);
+    document.getElementById('main-content')?.focus({ preventScroll: true });
+  }, [path, route.page]);
+  function authenticated(user, mode) {
+    setSession({ user, loading: false, error: null });
+    const next = new URLSearchParams(location.search).get('next');
+    navigate(mode === 'register' ? '/workspace' : safeReturnTo(next), { replace: true });
   }
   async function logout() {
-    setLoggingOut(true); setError(null);
-    try { await endSession(); setUser(null); setData({ profile: null, sections: [] }); setPage('overview'); notify('Logged out.'); }
-    catch (error) { setError(error); }
+    setLoggingOut(true); setLogoutError(null);
+    try { await endSession(); setSession({ user: null, loading: false, error: null }); notify('Logged out.'); navigate('/login', { replace: true }); }
+    catch (error) { setLogoutError(error); }
     finally { setLoggingOut(false); }
   }
-  if (loading) return <main className="startup"><Brand /><Loading /></main>;
-  if (!user && error) return <main className="startup"><Brand /><div className="card retry-card"><h1>Let’s reconnect.</h1><Notice error={error} /><button className="button primary" onClick={bootstrap}>Try again</button></div></main>;
-  if (!user) return <><nav className="public-recruitment-links" aria-label="Recruitment"><a href="/openings">Browse openings ↗</a><a href="/manage">Manage organization ↗</a></nav><Auth onAuthenticated={authenticated} /></>;
-
-  const { profile, sections } = data;
-  const updateProfile = profile => setData(previous => ({ ...previous, profile }));
-  const saveSection = section => setData(previous => ({ ...previous, sections: [...previous.sections.filter(item => item.gameId !== section.gameId), section] }));
-  return <>
-    <header className="topbar"><Brand /><div className="topbar-right"><span className="account-email">{user.email}</span><button className="button secondary compact" onClick={logout} disabled={loggingOut}>{loggingOut ? 'Logging out…' : 'Log out'}</button></div></header>
-    <div className="workspace">
-      <aside className="sidebar"><p className="eyebrow">PLAYER WORKSPACE</p><nav aria-label="Player workspace">{[['overview', '◫', 'Overview'], ['edit', '✎', 'Edit profile'], ['games', '⊞', 'Game profiles']].map(([id, icon, label]) => <button key={id} onClick={() => setPage(id)} aria-current={page === id ? 'page' : undefined}><span aria-hidden="true">{icon}</span>{label}<span className="nav-arrow" aria-hidden="true">↗</span></button>)}</nav>
-        <nav className="recruitment-sidebar" aria-label="Recruitment"><a href="/openings">Browse openings ↗</a><a href="/manage">Manage organization ↗</a></nav>
-        <div className="sidebar-note"><span className="small-label">A STRONG START</span><h3>Your story.<br />Your next team.</h3><p>Build a profile that shows what you bring to the game.</p><span className="sidebar-arrow" aria-hidden="true">↗</span></div>
-        <p className="sidebar-footer">ROSTERLINK / PLAYER FOUNDATION</p>
-      </aside>
-      <main className="main-content" id="main-content">
-        <div className="page-intro"><div><p className="eyebrow">LET’S BUILD WHAT’S NEXT</p><h1>{!profile ? 'Your journey starts here.' : page === 'overview' ? 'Your player profile.' : page === 'edit' ? 'Make it personal.' : 'Bring your game.'}</h1><p className="muted">{!profile ? 'Start with the essentials, then add your game experience.' : page === 'overview' ? 'A little about you. A lot of potential.' : page === 'edit' ? 'Keep your details and profile visuals up to date.' : 'Give each game its own space on your profile.'}</p></div><span className="workspace-tag">PLAYER SPACE <span aria-hidden="true">↗</span></span></div>
-        <Notice error={error} />
-        {!profile ? <><div className="onboarding-note"><span>01 / 03</span><p>Create your profile → Add your images → Add your game</p></div><ProfileForm profile={null} onSaved={setData} /></> : page === 'overview' ? <Overview profile={profile} sections={sections} games={games} navigate={setPage} /> : page === 'edit' ? <><ProfileForm key={profile.id} profile={profile} onSaved={result => updateProfile(result.profile)} /><Images profile={profile} onSaved={updateProfile} /></> : <Games profile={profile} games={games} sections={sections} onSaved={saveSection} onRemoved={id => setData(previous => ({ ...previous, sections: previous.sections.filter(section => section.gameId !== id) }))} />}
-        <footer className="workspace-footer"><span>Your next chapter starts with you.</span><span>RosterLink © {new Date().getFullYear()}</span></footer>
-      </main>
-    </div>
-  </>;
+  const user = session.user;
+  let content;
+  if (session.loading) content = <Loading />;
+  else if (session.error) content = <><h1>Let’s reconnect.</h1><Notice error={session.error} /><button className="button primary" onClick={bootstrap}>Try again</button></>;
+  else if (route.private && !user) content = <section className="card sign-in-state"><p className="eyebrow">ONE ACCOUNT. EVERY OPPORTUNITY.</p><h1>Log in to continue.</h1><p className="muted">Use your RosterLink account for your player profile and organization or team management.</p><div className="heading-actions"><a className="button primary" href={`/login?next=${encodeURIComponent(routeKey)}`}>Log in</a><a className="button secondary" href={`/register?next=${encodeURIComponent(routeKey)}`}>Create account</a></div></section>;
+  else if (route.page === 'auth') content = user ? <Redirect href={safeReturnTo(new URLSearchParams(location.search).get('next'))} /> : <Auth key={route.mode} mode={route.mode} onAuthenticated={authenticated} />;
+  else if (route.page === 'recovery') content = <RecoveryPage key={`${routeKey}-${recoveryVisit}`} />;
+  else if (route.page === 'workspace') content = user ? <Workspace key={user.id} /> : <Auth mode="register" onAuthenticated={authenticated} />;
+  else if (route.page === 'profile') content = <PlayerWorkspace key={user.id} tab={route.tab} />;
+  else if (route.page === 'public-profile') content = <PublicProfile profileId={publicProfileRoute(path)?.profileId} />;
+  else if (route.page === 'legacy-management') content = <Redirect href="/organizations" />;
+  else if (['organizations', 'management', 'openings', 'public-detail'].includes(route.page)) content = <Recruitment route={route} routeKey={routeKey} user={user} />;
+  else content = <section className="card empty-state"><h1>Page not found.</h1><p className="muted">This link does not lead to a RosterLink page.</p><a className="button primary" href={user ? '/workspace' : '/'}>Back to RosterLink</a></section>;
+  const authLayout = !session.loading && !session.error && (route.page === 'recovery' || (!user && (route.page === 'auth' || path === '/')));
+  return <><SiteHeader user={user} current={user && route.page === 'workspace' ? 'workspace' : route.destination} routeKey={routeKey} logout={logout} loggingOut={loggingOut} />
+    <main id="main-content" tabIndex={-1} className={authLayout ? 'account-page' : 'app-main'}><Notice error={logoutError} />{content}
+      {!authLayout && <footer className="workspace-footer"><span>Your next chapter starts with you.</span><span>RosterLink © {new Date().getFullYear()}</span></footer>}
+    </main></>;
 }
