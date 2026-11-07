@@ -1,3 +1,4 @@
+import { logout } from './navigation-helpers.js';
 import { test, expect } from '@playwright/test';
 import { readFile, unlink } from 'node:fs/promises';
 import { resolve } from 'node:path';
@@ -14,8 +15,8 @@ test('SF-03: request email, reset once, and log in with the new password', async
     await page.getByRole('button', { name: 'Create your account' }).click();
     await expect(page.getByRole('heading', { name: 'Your journey starts here.' })).toBeVisible();
     await expect(page.locator('.toast-region')).toContainText('Account created.');
-    await page.getByRole('button', { name: 'Log out', exact: true }).click();
-    await page.getByRole('button', { name: 'Log in', exact: true }).first().click();
+    await logout(page);
+    await page.locator('.auth-tabs').getByRole('link', { name: 'Log in', exact: true }).click();
     await page.getByRole('link', { name: 'Forgot password?' }).click();
     await expect(page.getByRole('heading', { name: 'Forgot your password?' })).toBeVisible();
     await page.screenshot({ path: testInfo.outputPath('forgot-password.png'), fullPage: true });

@@ -10,8 +10,8 @@ async function owner(page) {
 
 test('SF-06: an existing compact language list allows unrelated edits without losing languages', async ({ page }, testInfo) => {
   const before = await owner(page);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'Game profiles', exact: true }).click();
+  await page.goto('/profile');
+  await page.getByRole('link', { name: 'Game profiles', exact: true }).click();
   const availability = `Updated ${testInfo.project.name} availability`;
   await page.getByLabel('Availability', { exact: false }).fill(availability);
   await page.getByRole('button', { name: 'Save game section', exact: true }).click();
@@ -23,6 +23,7 @@ test('SF-06: an existing compact language list allows unrelated edits without lo
   expect(after.sections[0].details.availability).toBe(availability);
   expect(after.profile.languages).toEqual(before.profile.languages);
   await page.reload();
+  await page.getByRole('link', { name: 'Overview', exact: true }).click();
   await expect(page.getByText(availability, { exact: true })).toBeVisible();
 });
 
