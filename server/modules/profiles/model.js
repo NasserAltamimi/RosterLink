@@ -1,4 +1,8 @@
 import mongoose from 'mongoose';
+import { defaultPublicFields } from '../../../shared/profile-privacy.js';
+
+// SF-08: documents saved before this feature have neither field; resolvePrivacy() supplies defaults on read.
+const publicFieldsSchema = new mongoose.Schema(Object.fromEntries(Object.entries(defaultPublicFields).map(([key, value]) => [key, { type: Boolean, default: value }])), { _id: false, strict: 'throw' });
 
 const profileSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true, immutable: true },
@@ -8,6 +12,8 @@ const profileSchema = new mongoose.Schema({
   languages: { type: [String], required: true, validate: value => value.length >= 1 && value.length <= 8 && value.every(item => item.length > 0 && item.length <= 40) },
   profileImage: String,
   headerImage: String,
+  openToOffers: { type: Boolean, default: false },
+  publicFields: { type: publicFieldsSchema, default: () => ({}) },
 }, { timestamps: true, strict: 'throw' });
 
 export const PlayerProfile = mongoose.model('PlayerProfile', profileSchema);
