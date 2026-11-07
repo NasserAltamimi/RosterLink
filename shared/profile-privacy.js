@@ -3,15 +3,15 @@
 // Account email, password hash, owner/user IDs, storage keys and legacy details are never public.
 // Every toggle defaults to public so existing shared profiles look the same as before SF-08.
 export const publicFieldOptions = [
-  { key: 'bio', group: 'profile', label: 'About you (bio)' },
-  { key: 'region', group: 'profile', label: 'Region / country' },
-  { key: 'languages', group: 'profile', label: 'Languages you speak' },
+  { key: 'bio', group: 'profile', label: 'Bio' },
+  { key: 'region', group: 'profile', label: 'Region' },
+  { key: 'languages', group: 'profile', label: 'Spoken languages' },
   { key: 'profileImage', group: 'profile', label: 'Profile image' },
   { key: 'headerImage', group: 'profile', label: 'Header image' },
   { key: 'platform', group: 'game', detail: 'platform', label: 'Platform' },
   { key: 'playRegion', group: 'game', detail: 'server', label: 'Play region' },
   { key: 'communicationLanguages', group: 'game', detail: 'language', label: 'Communication languages' },
-  { key: 'availability', group: 'game', detail: 'availability', label: 'Availability for playing and tryouts' },
+  { key: 'availability', group: 'game', detail: 'availability', label: 'Availability' },
   { key: 'rank', group: 'game', detail: 'rank', label: 'Rank' },
   { key: 'tournamentExperience', group: 'game', label: 'Tournament experience', help: 'Hides your whole self-reported tournament list.' },
 ];

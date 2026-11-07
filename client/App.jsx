@@ -4,6 +4,7 @@ import Auth from './Auth.jsx';
 import ProfileForm from './ProfileForm.jsx';
 import Images from './Images.jsx';
 import Games from './Games.jsx';
+import PrivacySettings from './PrivacySettings.jsx';
 import { Brand, Loading, Notice } from './components.jsx';
 import { LegacyDetails } from './Experience.jsx';
 import { gameFields } from '../shared/game-form.js';
@@ -92,7 +93,7 @@ export default function App() {
       <main className="main-content" id="main-content">
         <div className="page-intro"><div><p className="eyebrow">LET’S BUILD WHAT’S NEXT</p><h1>{!profile ? 'Your journey starts here.' : page === 'overview' ? 'Your player profile.' : page === 'edit' ? 'Make it personal.' : 'Bring your game.'}</h1><p className="muted">{!profile ? 'Start with the essentials, then add your game experience.' : page === 'overview' ? 'A little about you. A lot of potential.' : page === 'edit' ? 'Keep your details and profile visuals up to date.' : 'Give each game its own space on your profile.'}</p></div><span className="workspace-tag">PLAYER SPACE <span aria-hidden="true">↗</span></span></div>
         <Notice error={error} />
-        {!profile ? <><div className="onboarding-note"><span>01 / 03</span><p>Create your profile → Add your images → Add your game</p></div><ProfileForm profile={null} onSaved={setData} /></> : page === 'overview' ? <Overview profile={profile} sections={sections} games={games} navigate={setPage} /> : page === 'edit' ? <><ProfileForm key={profile.id} profile={profile} onSaved={result => updateProfile(result.profile)} /><Images profile={profile} onSaved={updateProfile} /></> : <Games profile={profile} games={games} sections={sections} onSaved={saveSection} onRemoved={id => setData(previous => ({ ...previous, sections: previous.sections.filter(section => section.gameId !== id) }))} />}
+        {!profile ? <><div className="onboarding-note"><span>01 / 03</span><p>Create your profile → Add your images → Add your game</p></div><ProfileForm profile={null} onSaved={setData} /></> : page === 'overview' ? <Overview profile={profile} sections={sections} games={games} navigate={setPage} /> : page === 'edit' ? <><ProfileForm key={profile.id} profile={profile} onSaved={result => updateProfile(result.profile)} /><Images profile={profile} onSaved={updateProfile} /><PrivacySettings key={`privacy-${profile.id}`} profile={profile} onSaved={result => updateProfile(result.profile)} /></> : <Games profile={profile} games={games} sections={sections} onSaved={saveSection} onRemoved={id => setData(previous => ({ ...previous, sections: previous.sections.filter(section => section.gameId !== id) }))} />}
         <footer className="workspace-footer"><span>Your next chapter starts with you.</span><span>RosterLink © {new Date().getFullYear()}</span></footer>
       </main>
     </div>
