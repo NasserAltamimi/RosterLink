@@ -8,6 +8,7 @@ import { Game } from '../games/model.js';
 import { sharedDetailsInput, experienceInput } from '../games/player-form.js';
 import { sharedDetails } from '../../../shared/game-form.js';
 import { normalizeLanguages, profileLanguageLimits } from '../../../shared/languages.js';
+import { publicFieldKeys, resolvePrivacy } from '../../../shared/profile-privacy.js';
 import { HttpError, parse } from '../../lib/errors.js';
 
 const profileInput = z.object({
@@ -19,6 +20,17 @@ const profileInput = z.object({
 }).strict();
 const gameInput = z.object({ gameId: z.string().regex(/^[a-f0-9]{24}$/i), details: sharedDetailsInput, experience: experienceInput.optional() }).strict();
 const gameUpdate = gameInput.omit({ gameId: true });
+// SF-08: only known keys with Boolean values; omitted keys keep their saved value.
+const unknownKeys = issue => issue.code === 'unrecognized_keys' ? `Unknown setting: ${issue.keys.join(', ')}.` : issue.code === 'invalid_type' ? 'Send settings as a JSON object.' : undefined;
+const booleanSetting = key => z.boolean({ error: `${key} must be true or false.` }).optional();
+const settingsInput = z.strictObject({
+  openToOffers: booleanSetting('openToOffers'),
+  publicFields: z.strictObject(Object.fromEntries(publicFieldKeys.map(key => [key, booleanSetting(`publicFields.${key}`)])), { error: unknownKeys }).optional(),
+}, { error: unknownKeys }).refine(values => values.openToOffers !== undefined || Object.keys(values.publicFields || {}).length > 0, 'Send at least one setting to change.');
+function parseSettings(body) {
+  try { return parse(settingsInput, body); }
+  catch (error) { throw new HttpError(400, Object.values(error.fields || {})[0] || error.message, error.fields); }
+}
 const validId = id => { if (!mongoose.isObjectIdOrHexString(id)) throw new HttpError(404, 'Profile or game section not found.'); };
 
 function profileDto(profile) {
@@ -28,6 +40,7 @@ function profileDto(profile) {
     languages: profile.languages, updatedAt: profile.updatedAt,
     profileImageUrl: profile.profileImage ? imageUrl('profile') : null,
     headerImageUrl: profile.headerImage ? imageUrl('header') : null,
+    ...resolvePrivacy(profile),
   };
 }
 const sectionDto = section => ({ id: section.id, gameId: String(section.game), details: Object.fromEntries(section.details), sharedDetails: sharedDetails(Object.fromEntries(section.details)), legacyDetails: section.legacyDetails ? Object.fromEntries(section.legacyDetails) : section.schemaVersion < 2 ? Object.fromEntries(section.details) : {}, experience: section.experience || [], schemaVersion: section.schemaVersion, source: section.source, updatedAt: section.updatedAt });
@@ -57,6 +70,15 @@ export function profileRoutes(storage) {
   router.get('/:profileId', async (req, res) => res.json(await payload(req.profile)));
   router.put('/:profileId', async (req, res) => {
     const values = parse(profileInput, req.body);
+    const profile = await PlayerProfile.findOneAndUpdate({ _id: req.profile._id, owner: req.user._id }, { $set: values }, { returnDocument: 'after', runValidators: true });
+    if (!profile) throw new HttpError(404, 'Profile not found.');
+    res.json(await payload(profile));
+  });
+  router.patch('/:profileId/settings', async (req, res) => {
+    const { openToOffers, publicFields = {} } = parseSettings(req.body);
+    // Dotted paths change only the submitted toggles, so concurrent saves never undo each other.
+    const values = Object.fromEntries(Object.entries(publicFields).map(([key, value]) => [`publicFields.${key}`, value]));
+    if (openToOffers !== undefined) values.openToOffers = openToOffers;
     const profile = await PlayerProfile.findOneAndUpdate({ _id: req.profile._id, owner: req.user._id }, { $set: values }, { returnDocument: 'after', runValidators: true });
     if (!profile) throw new HttpError(404, 'Profile not found.');
     res.json(await payload(profile));
