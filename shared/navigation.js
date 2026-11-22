@@ -10,7 +10,15 @@ export function resolveRoute(pathname) {
   if (path === '/manage') return { page: 'legacy-management', destination: 'organizations', private: true };
   const management = path.match(/^\/manage\/organizations\/([a-f\d]{24})(?:\/(edit|teams\/new|teams\/([a-f\d]{24})(?:\/(edit))?))?$/i);
   if (management) return { page: 'management', destination: 'organizations', private: true, organizationId: management[1], action: management[2] || '', teamId: management[3], editTeam: Boolean(management[4]) };
+  if (path === '/feed') return { page: 'feed', destination: 'feed' };
   if (path === '/openings') return { page: 'openings', destination: 'openings' };
+  if (path === '/applications') return { page: 'applications', destination: 'applications', private: true };
+  if (path === '/notifications') return { page: 'notifications', destination: 'notifications', private: true };
+  const application = path.match(/^\/applications\/([a-f\d]{24})$/i);
+  if (application) return { page: 'application', destination: 'applications', id: application[1], private: true };
+  const review = path.match(/^\/manage\/openings\/([a-f\d]{24})\/applicants$/i);
+  if (review) return { page: 'applicants', destination: 'organizations', id: review[1], private: true };
+  if (path === '/tournaments') return { page: 'tournaments', destination: 'tournaments' };
   const detail = path.match(/^\/(organizations|teams|openings)\/([^/]+)$/);
   if (detail) return { page: 'public-detail', destination: detail[1] === 'openings' ? 'openings' : 'organizations', kind: detail[1], id: detail[2] };
   return { page: 'not-found', destination: '' };

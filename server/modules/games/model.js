@@ -16,6 +16,7 @@ export const Game = mongoose.model('Game', new mongoose.Schema({
   slug: { type: String, unique: true, required: true },
   name: { type: String, required: true },
   providerId: Number,
+  liquipediaWiki: { type: String, unique: true, sparse: true },
   imageUrl: String,
   enabled: { type: Boolean, default: true },
   schemaVersion: { type: Number, required: true },

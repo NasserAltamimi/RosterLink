@@ -13,6 +13,7 @@ const profileSchema = new mongoose.Schema({
   profileImage: String,
   headerImage: String,
   openToOffers: { type: Boolean, default: false },
+  sharedAffiliations: { type: [String], default: [] },
   publicFields: { type: publicFieldsSchema, default: () => ({}) },
 }, { timestamps: true, strict: 'throw' });
 
@@ -32,6 +33,9 @@ const playerGameSchema = new mongoose.Schema({
     stage: { type: String, maxlength: 120, default: '' },
     tournament: { type: new mongoose.Schema({ provider: { type: String, enum: ['pandascore'], required: true }, id: { type: Number, required: true }, gameId: { type: Number, required: true } }, { _id: false }), default: null },
     competition: { type: new mongoose.Schema({ provider: { type: String, enum: ['pandascore'], required: true }, gameId: { type: Number, required: true }, leagueId: { type: Number, required: true }, seriesId: { type: Number, required: true }, stageIds: [Number] }, { _id: false }), default: null },
+    liquipedia: { type: new mongoose.Schema({
+      wiki: { type: String, required: true, maxlength: 80 }, id: { type: String, required: true, maxlength: 500 }, retrievedAt: { type: Date, required: true },
+    }, { _id: false, strict: 'throw' }), default: undefined },
     result: { type: new mongoose.Schema({ kind: { type: String, enum: ['exact', 'range', 'top', 'elimination', 'manual'], required: true }, value: { type: String, required: true, maxlength: 120 } }, { _id: false }), default: null },
   }, { _id: false, strict: 'throw' })], default: [] },
 }, { timestamps: true, strict: 'throw' });

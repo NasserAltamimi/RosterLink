@@ -30,6 +30,27 @@ async function createProfile(page) {
   await expect(page.getByRole('heading', { name: 'Riyadh Pilot', exact: true })).toBeVisible();
 }
 
+test('Sprint 3: tournaments can be unavailable while a new game and rank are saved', async ({ page }) => {
+  await page.goto('/tournaments');
+  await expect(page.getByRole('heading', { name: 'Tournaments' })).toBeVisible();
+  await expect(page.getByRole('alert')).toContainText('temporarily unavailable');
+  await page.getByLabel('Game', { exact: true }).selectOption({ label: 'Apex Legends' });
+  await expect(page.getByRole('link', { name: 'Liquipedia', exact: true })).toHaveAttribute('href', 'https://liquipedia.net/apexlegends/');
+  await expect(page.getByRole('alert')).toContainText('temporarily unavailable');
+  await register(page); await createProfile(page);
+  await page.getByRole('link', { name: 'Game profiles', exact: true }).click();
+  await page.getByRole('radio', { name: 'Apex Legends', exact: true }).check();
+  await page.getByLabel('Platform', { exact: false }).selectOption('PC');
+  await page.getByRole('combobox', { name: /^Rank/ }).selectOption('Apex Predator');
+  await page.getByRole('combobox', { name: 'Play region' }).selectOption('Middle East');
+  await chooseLanguages(gameLanguages(page), { english: true });
+  await page.getByLabel('Availability', { exact: false }).fill('Fri 20:00 Asia/Riyadh');
+  await page.getByRole('button', { name: 'Add game section', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Save game section' })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('combobox', { name: /^Rank/ })).toHaveValue('Apex Predator');
+});
+
 test('SF-01–07: real player journey with profile, game, both images, reload and later login', async ({ page }, testInfo) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   await register(page);
@@ -37,7 +58,7 @@ test('SF-01–07: real player journey with profile, game, both images, reload an
   await createProfile(page);
   await page.getByRole('link', { name: 'Game profiles', exact: true }).click();
   await page.getByLabel('Platform', { exact: false }).selectOption('PC');
-  await page.getByLabel(/^Rank/).fill('Champion II');
+  await page.getByRole('combobox', { name: /^Rank/ }).selectOption('Champion II');
   await page.getByRole('combobox', { name: 'Play region' }).selectOption('Middle East');
   await chooseLanguages(gameLanguages(page), { arabic: true, english: true });
   await page.getByLabel('Availability', { exact: false }).fill('Sun–Thu 20:00–23:00 Asia/Riyadh');
@@ -55,7 +76,7 @@ test('SF-01–07: real player journey with profile, game, both images, reload an
   await page.reload();
   await page.getByRole('link', { name: 'Overview', exact: true }).click();
   await expect(page.getByText('Updated profile — لاعب تنافسي.', { exact: true })).toBeVisible();
-  await expect(page.getByText('Champion II', { exact: true })).toBeVisible();
+  await expect(page.locator('.game-summary').getByText('Champion II', { exact: true })).toBeVisible();
   for (const alt of ['Your player avatar', 'Your player header']) {
     const image = page.getByAltText(alt);
     await expect(image).toBeVisible();
@@ -73,7 +94,7 @@ test('SF-01–07: real player journey with profile, game, both images, reload an
   await expect(page).toHaveURL(/\/workspace$/);
   await page.goto('/profile');
   await expect(page.getByText('Updated profile — لاعب تنافسي.', { exact: true })).toBeVisible();
-  await expect(page.getByText('Champion II', { exact: true })).toBeVisible();
+  await expect(page.locator('.game-summary').getByText('Champion II', { exact: true })).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -94,6 +115,7 @@ test('shared game forms: optional rank, tournament metadata/manual entries, pagi
   await chooseLanguages(gameLanguages(page), { arabic: true, english: true });
   await page.getByLabel('Availability', { exact: false }).fill('Fri 20:00 Asia/Riyadh; tryouts Sat');
   const search = page.getByLabel('Search Rocket League competitions');
+  await page.getByText('PandaScore competition lookup', { exact: true }).click();
   await search.fill('EW'); await search.fill('EWC');
   await expect(page.getByRole('button', { name: 'Select Esports World Cup 2026' })).toHaveCount(1);
   expect(searches).toHaveLength(1);
@@ -128,6 +150,7 @@ test('shared game forms: optional rank, tournament metadata/manual entries, pagi
   await page.getByRole('radio', { name: 'Valorant', exact: true }).check();
   await expect(page.getByLabel(/^Rank/)).toHaveValue('');
   const otherSearch = page.getByLabel('Search Valorant competitions');
+  await page.getByText('PandaScore competition lookup', { exact: true }).click();
   await otherSearch.fill('empty');
   await expect(page.getByText('No matches in the provider pages searched.', { exact: false })).toBeVisible();
   await otherSearch.fill('outage');
@@ -171,6 +194,7 @@ test('Mobile Legends EWC/MSC aliases, grouped editions, bounded pagination and m
   await page.getByRole('link', { name: 'Game profiles', exact: true }).click();
   await page.getByRole('radio', { name: 'Mobile Legends: Bang Bang' }).check();
   const search = page.getByLabel('Search Mobile Legends: Bang Bang competitions');
+  await page.getByText('PandaScore competition lookup', { exact: true }).click();
   for (const query of ['EWC', 'Esports World Cup', 'MSC', 'Mid Season Cup']) {
     await search.fill(query);
     await expect(page.getByRole('button', { name: 'Select Mid Season Cup 2026' })).toHaveCount(1);

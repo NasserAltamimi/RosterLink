@@ -1,7 +1,8 @@
+import { t } from './i18n.js';
 import { useEffect, useState } from 'react';
 import Auth from './Auth.jsx';
 import { api } from './api.js';
-import { Field, Notice, Loading } from './components.jsx';
+import { Field, Notice, Loading, PasswordField } from './components.jsx';
 
 export default function PasswordRecovery({ token }) {
   const reset = location.pathname === '/reset-password';
@@ -43,19 +44,19 @@ export default function PasswordRecovery({ token }) {
     } finally { setBusy(false); }
   }
   return <Auth>
-    <p className="eyebrow">ACCOUNT RECOVERY</p>
-    <h2>{reset ? 'Choose a new password.' : 'Forgot your password?'}</h2>
-    <p className="muted">{reset ? 'Use a memorable passphrase to get back to your next chapter.' : 'Enter your account email and we will send you a reset link.'}</p>
+    <p className="eyebrow">{t("ACCOUNT RECOVERY")}</p>
+    <h1>{reset ? t("Choose a new password.") : t("Forgot your password?")}</h1>
+    <p className="muted">{reset ? t("Use a memorable passphrase to get back to your next chapter.") : t("Enter your account email and we will send you a reset link.")}</p>
     <Notice error={error} />
-    {message && <Notice>{message}</Notice>}
-    {checking ? <Loading>Checking your reset link…</Loading> : (!reset || linkValid) && <form onSubmit={submit} aria-busy={busy}>
+    {message && <Notice>{t(message)}</Notice>}
+    {checking ? <Loading>{t("Checking your reset link…")}</Loading> : (!reset || linkValid) && <form onSubmit={submit} aria-busy={busy}>
       {reset ? <>
-        <Field label="New password" name="password" type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={password} onChange={event => setPassword(event.target.value)} error={error?.fields?.password} help="Use 12–128 characters. A memorable passphrase works well." />
-        <Field label="Confirm new password" name="confirmPassword" type="password" autoComplete="new-password" required minLength={12} maxLength={128} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} error={error?.fields?.confirmPassword} />
-      </> : <Field label="Email address" name="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setMessage(''); }} error={error?.fields?.email} placeholder="you@example.com" />}
-      <button className="button primary full" type="submit" disabled={busy}>{busy ? (reset ? 'Resetting password…' : 'Sending reset link…') : reset ? 'Reset password' : 'Send reset link'}</button>
+        <PasswordField label={t("New password")} name="password" autoComplete="new-password" required minLength={12} maxLength={128} value={password} onChange={event => setPassword(event.target.value)} error={error?.fields?.password} help={t("Use 12–128 characters. A memorable passphrase works well.")} />
+        <PasswordField label={t("Confirm new password")} name="confirmPassword" autoComplete="new-password" required minLength={12} maxLength={128} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} error={error?.fields?.confirmPassword} />
+      </> : <Field label={t("Email address")} name="email" type="email" autoComplete="email" required maxLength={254} value={email} onChange={event => { setEmail(event.target.value); setMessage(''); }} error={error?.fields?.email} placeholder="you@example.com" />}
+      <button className="button primary full" type="submit" disabled={busy}>{busy ? (reset ? t("Resetting password…") : t("Sending reset link…")) : reset ? t("Reset password") : t("Send reset link")}</button>
     </form>}
-    {reset && !checking && !linkValid && <p><a className="text-button" href="/forgot-password">Request a new reset link</a></p>}
-    <p><a className="text-button" href="/login">Back to log in</a></p>
+    {reset && !checking && !linkValid && <p><a className="text-button" href="/forgot-password">{t("Request a new reset link")}</a></p>}
+    <p><a className="text-button" href="/login">{t("Back to log in")}</a></p>
   </Auth>;
 }

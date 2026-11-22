@@ -20,5 +20,6 @@ export const experienceInput = z.array(z.object({
   competition: z.object({
     provider: z.literal('pandascore'), gameId: z.number().int().positive(), leagueId: z.number().int().positive(), seriesId: z.number().int().positive(), stageIds: z.array(z.number().int().positive()).max(100).transform(ids => [...new Set(ids)]),
   }).strict().nullable().optional().default(null),
+  liquipedia: z.strictObject({ wiki: z.string().regex(/^[a-z0-9]+$/).max(80), id: text(500), retrievedAt: z.iso.datetime().optional() }).optional(),
   result: z.object({ kind: z.enum(['exact', 'range', 'top', 'elimination', 'manual']), value: text(120) }).strict().nullable().optional().default(null),
 }).strict()).max(20, 'Add up to 20 tournament entries per game.');

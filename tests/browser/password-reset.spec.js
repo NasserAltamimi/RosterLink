@@ -11,7 +11,7 @@ test('SF-03: request email, reset once, and log in with the new password', async
   try {
     await page.goto('/');
     await page.getByLabel('Email address').fill(email);
-    await page.getByLabel('Password', { exact: false }).fill(password);
+    await page.getByLabel(/^Password/).fill(password);
     await page.getByRole('button', { name: 'Create your account' }).click();
     await expect(page.getByRole('heading', { name: 'Your journey starts here.' })).toBeVisible();
     await expect(page.locator('.toast-region')).toContainText('Account created.');
@@ -31,16 +31,16 @@ test('SF-03: request email, reset once, and log in with the new password', async
     await expect(page.getByLabel('New password', { exact: false }).first()).toBeVisible();
     expect(new URL(page.url()).hash).toBe('');
     await page.getByLabel('New password', { exact: false }).first().fill(replacement);
-    await page.getByLabel('Confirm new password').fill(password);
+    await page.getByLabel(/^Confirm new password/i).fill(password);
     await page.getByRole('button', { name: 'Reset password', exact: true }).click();
     await expect(page.getByRole('alert')).toContainText('Passwords must match.');
-    await page.getByLabel('Confirm new password').fill(replacement);
+    await page.getByLabel(/^Confirm new password/i).fill(replacement);
     await page.screenshot({ path: testInfo.outputPath('new-password.png'), fullPage: true });
     await page.getByRole('button', { name: 'Reset password', exact: true }).click();
     await expect(page).toHaveURL(/\/login\?passwordReset=success$/);
     await expect(page.locator('.auth-card').getByRole('status')).toContainText('Log in with your new password.');
     await page.getByLabel('Email address').fill(email);
-    await page.getByLabel('Password', { exact: false }).fill(replacement);
+    await page.getByLabel(/^Password/).fill(replacement);
     await page.getByRole('button', { name: 'Log in', exact: true }).last().click();
     await expect(page.getByRole('heading', { name: 'Your journey starts here.' })).toBeVisible();
     await expect(page.locator('.toast-region')).toContainText('Logged in successfully.');

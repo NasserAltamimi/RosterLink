@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 import { useId, useState } from 'react';
 import { api } from './api.js';
 import { Notice, Submit } from './components.jsx';
@@ -32,17 +33,17 @@ export default function PrivacySettings({ profile, onSaved }) {
     } catch (error) { setError(error); }
     finally { setBusy(false); }
   }
-  return <section className="card form-card"><div className="section-heading"><div><p className="eyebrow">YOUR VISIBILITY</p><h2>Recruiting &amp; Privacy</h2></div><span className="step-number">03</span></div>
-    <p className="muted">Choose what people see on your shared public profile. You always see everything here.</p>
+  return <section className="card form-card"><div className="section-heading"><h2>{t("Recruiting & Privacy")}</h2></div>
+    <p className="muted">{t("Choose what people see on your shared public profile. You always see everything here.")}</p>
     <form onSubmit={submit}>
       <Notice error={error} />
-      <fieldset className="toggle-group"><legend>Recruiting</legend>
-        <Toggle label="Open to offers" help="Shows an “Open to offers” badge so teams know you are looking." checked={openToOffers} onChange={setOpenToOffers} disabled={busy} />
+      <fieldset className="toggle-group"><legend>{t("Recruiting")}</legend>
+        <Toggle label={t("Open to offers")} help={t("Shows an “Open to offers” badge so teams know you are looking.")} checked={openToOffers} onChange={setOpenToOffers} disabled={busy} />
       </fieldset>
-      {groups.map(([group, legend, note]) => <fieldset className="toggle-group" key={group}><legend>{legend}</legend><p className="muted small">{note}</p>
-        {publicFieldOptions.filter(option => option.group === group).map(option => <Toggle key={option.key} label={option.label} help={option.help} checked={publicFields[option.key]} onChange={value => setPublicFields(previous => ({ ...previous, [option.key]: value }))} disabled={busy} />)}
+      {groups.map(([group, legend, note]) => <fieldset className="toggle-group" key={group}><legend>{t(legend)}</legend><p className="muted small">{t(note)}</p>
+        {publicFieldOptions.filter(option => option.group === group).map(option => <Toggle key={option.key} label={t(option.label)} help={t(option.help)} checked={publicFields[option.key]} onChange={value => setPublicFields(previous => ({ ...previous, [option.key]: value }))} disabled={busy} />)}
       </fieldset>)}
-      <div className="form-actions"><a className="text-button" href={`/p/${profile.id}`} target="_blank" rel="noopener">Preview public profile ↗</a><Submit busy={busy}>Save settings</Submit></div>
+      <div className="form-actions"><a className="text-button" href={`/p/${profile.id}`} target="_blank" rel="noopener">{t("Preview public profile ↗")}</a><Submit busy={busy}>{t("Save settings")}</Submit></div>
     </form>
   </section>;
 }

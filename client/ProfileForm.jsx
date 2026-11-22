@@ -1,3 +1,4 @@
+import { number, t } from './i18n.js';
 import { useRef, useState } from 'react';
 import { api } from './api.js';
 import { Field, Notice, Submit } from './components.jsx';
@@ -34,17 +35,17 @@ export default function ProfileForm({ profile, onSaved }) {
     } catch (error) { setError(error); }
     finally { setBusy(false); }
   }
-  return <section className="card form-card"><div className="section-heading"><div><p className="eyebrow">THE PLAYER BEHIND THE HANDLE</p><h2>{profile ? 'Your player details' : 'Create your player profile'}</h2></div><span className="step-number">01</span></div>
-    <p className="muted">Give future teammates a sense of who you are. Required fields are marked *.</p>
+  return <section className="card form-card"><div className="section-heading"><h2>{profile ? t("Your player details") : t("Create your player profile")}</h2></div>
+    <p className="muted">{t("Give future teammates a sense of who you are. Required fields are marked *.")}</p>
     <form onSubmit={submit}>
       <Notice error={error} />
       <div className="form-grid">
-        <Field label="Gaming / display name" required maxLength={50} minLength={2} value={values.displayName} onChange={change('displayName')} error={error?.fields?.displayName} autoComplete="nickname" dir="auto" placeholder="Your in-game name" />
-        <Field label="Region / country" required maxLength={80} value={values.region} onChange={change('region')} error={error?.fields?.region} dir="auto" placeholder="e.g. Saudi Arabia / MENA" />
+        <Field label={t("Gaming / display name")} required maxLength={50} minLength={2} value={values.displayName} onChange={change('displayName')} error={error?.fields?.displayName} autoComplete="nickname" dir="auto" placeholder={t("Your in-game name")} />
+        <Field label={t("Region / country")} required maxLength={80} value={values.region} onChange={change('region')} error={error?.fields?.region} dir="auto" placeholder={t("e.g. Saudi Arabia / MENA")} />
       </div>
-      <LanguagePicker label="Languages" selection={languages} onChange={setLanguages} disabled={busy} focusRef={languageInput} customMaxLength={profileLanguageLimits.maxItems * (profileLanguageLimits.maxItemLength + 2)} error={languageError(error?.fields)} help={`Choose every language you speak. Up to ${profileLanguageLimits.maxItems} languages.`} />
-      <Field label="About you" as="textarea" rows={5} maxLength={1000} value={values.bio} onChange={change('bio')} error={error?.fields?.bio} help={`${values.bio.length}/1000 characters`} dir="auto" placeholder="Your play style, competitive goals, and what you bring to a team." />
-      <div className="form-actions"><span className="muted small">Only you can edit your profile.</span><Submit busy={busy}>{profile ? 'Save profile' : 'Create profile'}</Submit></div>
+      <LanguagePicker label={t("Languages")} selection={languages} onChange={setLanguages} disabled={busy} focusRef={languageInput} customMaxLength={profileLanguageLimits.maxItems * (profileLanguageLimits.maxItemLength + 2)} error={languageError(error?.fields)} help={t('Choose every language you speak. Up to {count} languages.', { count: number(profileLanguageLimits.maxItems) })} />
+      <Field label={t("About you")} as="textarea" rows={5} maxLength={1000} value={values.bio} onChange={change('bio')} error={error?.fields?.bio} help={t('{count}/1000 characters', { count: number(values.bio.length) })} dir="auto" placeholder={t("Your play style, competitive goals, and what you bring to a team.")} />
+      <div className="form-actions"><span className="muted small">{t("Only you can edit your profile.")}</span><Submit busy={busy}>{profile ? t("Save profile") : t("Create profile")}</Submit></div>
     </form>
   </section>;
 }
