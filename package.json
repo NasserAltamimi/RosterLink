@@ -13,6 +13,7 @@
     "db": "node scripts/local-mongo.js",
     "setup:local": "node scripts/setup-local.js",
     "seed": "node server/seed.js",
+    "seed:demo": "node scripts/seed-demo.js",
     "sync:games": "node scripts/sync-games.js",
     "build": "vite build",
     "start": "node server/index.js",
@@ -22,6 +23,8 @@
     "check": "npm test && npm run build"
   },
   "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@ffprobe-installer/ffprobe": "^2.1.2",
     "connect-mongo": "6.0.0",
     "dotenv": "18.0.9",
     "express": "5.3.0",

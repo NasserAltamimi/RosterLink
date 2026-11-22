@@ -1,10 +1,18 @@
+import { t } from './i18n.js';
 import { useEffect, useState } from 'react';
 import { api } from './api.js';
 import { Loading, Notice } from './components.jsx';
 import { gameFields } from '../shared/game-form.js';
+import { displayGameDetail, displayPlacement } from './presentation.js';
+import { ExperienceSource } from './LiquipediaExperience.jsx';
+import IdentityMark from './IdentityMark.jsx';
+import CopyLink from './CopyLink.jsx';
+import { Connections } from './Connections.jsx';
+import Posts from './Posts.jsx';
+import ProfileHero from './ProfileHero.jsx';
 
 // SF-13: read-only public player profile opened from a shared link (/p/<profileId>).
-export default function PublicProfile({ profileId }) {
+export default function PublicProfile({ profileId, user }) {
   const [state, setState] = useState({ loading: true });
   useEffect(() => {
     let active = true;
@@ -16,27 +24,33 @@ export default function PublicProfile({ profileId }) {
     return () => { active = false; };
   }, [profileId]);
 
-  if (state.loading) return <Loading>Loading profile…</Loading>;
-  if (state.error) return <div className="card retry-card"><h1>{state.error.status === 404 ? 'Profile not found.' : 'Let’s reconnect.'}</h1><Notice error={state.error} /><a className="button primary" href="/">Go to RosterLink</a></div>;
+  if (state.loading) return <Loading>{t("Loading profile…")}</Loading>;
+  if (state.error) return <div className="card retry-card"><h1>{state.error.status === 404 ? t("Profile not found.") : t("Let’s reconnect.")}</h1><Notice error={state.error} /><a className="button primary" href="/">{t("Go to RosterLink")}</a></div>;
 
   const { profile, sections } = state.data;
   // SF-08: hidden fields are omitted by the API, so render only what is present.
-  const subtitle = [profile.region, profile.languages?.join(' / ')].filter(Boolean);
+  const hasAffiliations = Boolean(profile.affiliations?.length);
   return <>
-      <section className="card player-card">
-        <div className="player-cover">{profile.headerImageUrl ? <img src={profile.headerImageUrl} alt="Player header" /> : <><span className="cover-word" aria-hidden="true">NEXT UP.</span><span className="cover-mark" aria-hidden="true">↗</span></>}</div>
-        <div className="player-info"><div className="avatar">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="Player avatar" /> : <span>{profile.displayName.slice(0, 2).toUpperCase()}</span>}</div>
-          <div className="player-heading"><div><p className="eyebrow">PLAYER PROFILE</p><h1 dir="auto">{profile.displayName}</h1>{subtitle.length > 0 && <p className="muted" dir="auto">{subtitle.map((part, index) => <span key={index}>{index > 0 && <span aria-hidden="true"> · </span>}{part}</span>)}</p>}</div>{profile.openToOffers && <span className="badge offers">Open to offers</span>}</div>
-          {profile.bio && <div className="player-bio"><h3>About</h3><p dir="auto">{profile.bio}</p></div>}
-        </div>
-      </section>
-      <div className="section-title"><div><p className="eyebrow">WHERE THEY COMPETE</p><h2>Game experience</h2></div></div>
+    <ProfileHero profile={profile} sections={sections} games={state.games} navigation={[[ 'game-experience', 'Game experience' ], ['posts', 'Posts'], ...(hasAffiliations ? [['public-affiliations', 'Affiliations']] : [])]} actions={<CopyLink path={`/p/${profile.id}`} />} />
+    <Connections key={profile.id} kind="player" id={profile.id} name={profile.displayName} user={user} />
+    <div className="profile-layout-body">
+      {(profile.bio || hasAffiliations) && <aside className="profile-summary">
+        {profile.bio && <section className="card form-card"><h2>{t("About")}</h2><p className="muted preserve-lines" dir="auto">{profile.bio}</p></section>}
+        {hasAffiliations && <section className="card form-card" id="public-affiliations"><h2>{t("Affiliations")}</h2><ul className="affiliation-list">{profile.affiliations.map(item => <li key={item.teamId || item.organizationId}><div className="affiliation-identity"><IdentityMark className="org-mark" name={item.organization} src={item.logoUrl} /><div>
+            <a className="affiliation-name" dir="auto" href={item.teamId ? `/teams/${item.teamId}` : `/organizations/${item.organizationId}`}>{item.team || item.organization}</a>
+            <p className="muted small" dir="auto">{t(item.role)}{item.team && <> · <bdi>{item.organization}</bdi></>}</p></div></div></li>)}</ul></section>}
+      </aside>}
+      <div className="profile-record">
+      <div className="section-title" id="game-experience"><h2>{t("Game experience")}</h2></div>
       {sections.length ? sections.map(section => {
         const game = state.games.find(item => item._id === section.gameId);
-        return <section className="card game-summary" key={section.gameId}><div className="game-monogram" aria-hidden="true">{game?.name.split(' ').map(word => word[0]).join('') || 'G'}</div><div className="game-summary-body"><div className="section-heading"><h3>{game?.name || 'Game'}</h3><span className="badge">Self-reported</span></div>
-          {gameFields.some(field => section.details[field.key]) && <dl className="game-details">{gameFields.filter(field => section.details[field.key]).map(field => <div key={field.key}><dt>{field.label}</dt><dd dir="auto">{section.details[field.key]}</dd></div>)}</dl>}
-          {Boolean(section.experience?.length) && <div className="experience-summary"><h4>Competitive experience · Self-reported</h4><p className="muted small">Competition metadata does not verify identity, participation, or results.</p><ul>{section.experience.map((entry, index) => <li key={index}><strong dir="auto">{entry.name}</strong> <span dir="auto">{entry.edition}{entry.stage && ` · ${entry.stage}`} · {entry.placement}</span></li>)}</ul></div>}
+        return <section className="card game-summary" id={`game-${section.gameId}`} key={section.gameId}><IdentityMark className="game-monogram" name={game?.name || 'Game'} src={game?.imageUrl} /><div className="game-summary-body"><div className="section-heading"><div><h3>{game?.name || t("Game")}</h3>{section.details.rank && <span className="rank-label"><strong dir="auto">{section.details.rank}</strong><span>{t("Self-reported rank")}</span></span>}</div>{!section.details.rank && <span className="badge">{t("Self-reported")}</span>}</div>
+          {gameFields.some(field => field.key !== 'rank' && section.details[field.key]) && <dl className="game-details">{gameFields.filter(field => field.key !== 'rank' && section.details[field.key]).map(field => <div key={field.key}><dt>{field.key === 'availability' ? t("Availability") : t(field.label)}</dt><dd dir="auto">{displayGameDetail(field.key, section.details[field.key])}</dd></div>)}</dl>}
+          {Boolean(section.experience?.length) && <div className="experience-summary"><h4>{t("Competitive experience · Self-reported")}</h4><p className="muted small">{t("Competition metadata does not verify identity, participation, or results.")}</p><ul>{section.experience.map((entry, index) => <li key={index}><strong dir="auto">{entry.name}</strong> <span dir="auto">{entry.edition}{entry.stage && ` · ${entry.stage}`} · {displayPlacement(entry)}</span><p className="muted small"><ExperienceSource entry={entry} /></p></li>)}</ul></div>}
         </div></section>;
-      }) : <section className="card empty-state"><h3>No games added yet.</h3></section>}
+      }) : <section className="card empty-state"><h3>{t("No games added yet.")}</h3></section>}
+      <Posts key={`${profile.id}-${user?.id || 'guest'}`} kind="player" id={profile.id} signedIn={Boolean(user)} />
+      </div>
+    </div>
   </>;
 }

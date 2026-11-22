@@ -15,11 +15,14 @@ export function createResetMailer(config, createTransport = nodemailer.createTra
     greetingTimeout: 10000, socketTimeout: 15000,
     disableFileAccess: true, disableUrlAccess: true,
   });
-  return async ({ email, link }) => {
+  return async ({ email, link, language }) => {
+    const arabic = language === 'ar';
     await transport.sendMail({
       from: `RosterLink <${sender}>`, to: email,
-      subject: 'Reset your RosterLink password',
-      text: `You requested a password reset for RosterLink.\n\nChoose a new password: ${link}\n\nThis link expires in 30 minutes and can be used once. After resetting, log in again. If you did not request this, ignore this email.`,
+      subject: arabic ? 'إعادة تعيين كلمة مرور RosterLink' : 'Reset your RosterLink password',
+      text: arabic
+        ? `طلبت إعادة تعيين كلمة مرور حسابك في RosterLink.\n\nاختر كلمة مرور جديدة عبر هذا الرابط:\n${link}\n\nتنتهي صلاحية الرابط بعد ٣٠ دقيقة ويمكن استخدامه مرة واحدة. بعد إعادة التعيين، سجّل الدخول مجددًا. إذا لم تطلب إعادة التعيين، تجاهل هذه الرسالة.`
+        : `You requested a password reset for RosterLink.\n\nChoose a new password: ${link}\n\nThis link expires in 30 minutes and can be used once. After resetting, log in again. If you did not request this, ignore this email.`,
     });
   };
 }

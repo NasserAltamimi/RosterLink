@@ -2,7 +2,7 @@
 
 A responsive esports player platform for SWE 444 at King Saud University. The wider workflow is **player profile → team opening → application → review → tryout → decision**.
 
-This branch implements accounts, secure sessions, password recovery, manual player profiles, a MongoDB-backed game catalog, separate game sections, persistent profile/header images, and PandaScore competition metadata lookup. All selectable games share one form, with self-reported rank and competition results. Sprint 2 adds parent organizations, game-specific teams, scoped management roles, recruitment openings, and public browsing/filtering. Applications, tryouts, notifications, verification, social features, and player-account integration remain later work.
+RosterLink supports accounts, password recovery, player profiles, organizations, game-specific teams, and recruitment openings. In Sprint 3, players can apply, track progress, and respond to tryout invitations. Managers review applicants and record decisions. Player profiles support opt-in affiliations and Liquipedia tournament metadata. Player ranks and competition results are self-reported.
 
 ## Run locally
 
@@ -26,12 +26,29 @@ This starts **real MongoDB 8.0.17**, bound to `127.0.0.1:27017`, with persistent
 In terminal 2, after MongoDB is ready:
 
 ```powershell
-npm run seed
 npm run sync:games
 npm run dev
 ```
 
-Open **http://127.0.0.1:5173**. Vite proxies `/api` to Express at `127.0.0.1:3001`. Use `127.0.0.1` consistently rather than mixing it with `localhost`. Stop with Ctrl+C. Restarting retains development accounts, sessions, profiles, game sections, and images. The seed only configures Rocket League; it creates no demo users or fabricated provider data.
+Open **http://127.0.0.1:5173**. Vite proxies `/api` to Express at `127.0.0.1:3001`. Use `127.0.0.1` for local access. Stop with Ctrl+C. Restarting retains development accounts, sessions, profiles, game sections, and images. Catalog setup works offline once MongoDB is running.
+
+## Local demo
+
+With local MongoDB running, execute `npm run seed:demo` from the repository root. The seed uses the development database and image directory from `.env`. It adds fictional records with stable IDs and keeps existing records and edits. It can be rerun.
+
+Sign in with the demo password `RosterLink Demo 2026!`.
+
+| Account | Start here |
+| --- | --- |
+| `new@rosterlink-demo.test` | My Workspace, with a fresh account |
+| `player@rosterlink-demo.test` | Openings → Rotation player · 3v3, ready for a new application |
+| `active@rosterlink-demo.test` | Applications or Notifications, with a tryout awaiting a response |
+| `recruiter@rosterlink-demo.test` | Organizations → Stratos Vale → Stratos Velocity, or My Profile for the same account’s player view |
+| `captain@rosterlink-demo.test` | Organizations, with one organization to manage |
+
+For discovery, open **Discover → Feed** (or **View feed** in My Workspace). The player demo starts in Following with Lina “Pulse” Faris and Stratos Vale. Under **Find accounts**, search for **Stratos Velocity** and follow the team to add its updates. The new-account demo starts in All. Following always belongs to the signed-in account.
+
+For posts, sign in as `player@rosterlink-demo.test` and choose **My Profile → Posts**. As `recruiter@rosterlink-demo.test`, choose **Organizations → Stratos Vale → Posts** to publish as the club, or **Stratos Velocity → Manage team → Posts** to publish as the team. Sign in with a different demo account and visit the author's public page to react or comment. The seed includes public posts, reactions, and comments for all three author types.
 
 ## Build and verify
 
@@ -67,7 +84,7 @@ Open http://127.0.0.1:3001. Production requires HTTPS, `NODE_ENV=production`, th
 6. Create a second account in a separate browser context. The first account's profile/game/image IDs cannot be read or modified using this session. Automated tests reproduce the attack requests.
 7. Try an invalid login, duplicate email, invalid image, and failed connection. Check useful errors and preserved form edits.
 
-`npm run sync:games` imports PandaScore's game catalog using the server-only `PANDASCORE_API_TOKEN` in `.env`. All selectable games, including Rocket League, use one shared form: platform, server/play region, communication languages, and playing/tryout availability are required; rank and competitive experience are optional. Tournament experience supports backend PandaScore search and manual entry. Participation and placement are **self-reported**. Existing player-game IDs and original details are retained. See [shared-form behavior, migration, actual coverage, bounds, and demonstration](docs/shared-game-form.md).
+All games share a form with platform, play region, communication languages, and playing/tryout availability. Rank and competitive experience are optional. Profile experience uses PandaScore metadata search and manual entry. See [shared-form behavior and saved data compatibility](docs/shared-game-form.md).
 
 ## Demonstrate Sprint 2
 
@@ -81,7 +98,28 @@ See [Sprint 2 evidence](docs/sprint-2-evidence.md) for the two-organization demo
 
 See [competition-selection fixes and verified EWC/MSC coverage](docs/competition-selection-fixes.md) for the region dropdown, grouped competition editions, separate result choices, compatibility rules, and live provider/backend/UI checks.
 
-The interface is **English/LTR**. Arabic input/Unicode persistence are supported; logical CSS properties and per-field `dir="auto"` prepare for localization. A translated Arabic/RTL interface is not implemented or claimed complete.
+Sprint 2 shipped English interface controls and supported Arabic content. Sprint 3 adds an **العربية / English** header switch on public and signed-in pages. It changes language and layout direction in place and remembers the choice across sign-in and refresh. Names, posts, comments, and provider content retain their original text. The missing-profile and unavailable-account fallback labels still appear in English.
+
+## Sprint 3 game catalog, ranks, and tournaments
+
+`npm run sync:games` applies the local snapshot in [`liquipedia-catalog.js`](server/modules/games/liquipedia-catalog.js). It includes the 31 Main wikis from the Liquipedia Hub list, plus Chess and PUBG Mobile from the API coverage page. Shared wikis can include more than one edition or title. To refresh, review those official lists, confirm each wiki identifier, update the snapshot while retaining existing slugs and provider IDs, then rerun the command. Existing records are matched by wiki, slug, or legacy PandaScore ID, and updated in place. [Liquipedia Hub wiki list](https://liquipedia.net/hub/Support/Liquipedia), [Liquipedia API game coverage](https://liquipedia.net/api).
+
+Players can select an optional self-reported rank where publisher options are listed in [`ranks.js`](server/modules/games/ranks.js). The profile editor links to each publisher's guide and keeps previously saved values available. Other games accept optional rank text.
+
+Open **Tournaments** (`/tournaments`) to browse up to 30 listings per game, ordered by start date descending. Set `LIQUIPEDIA_API_KEY` in the ignored root `.env` and restart the API to enable the feed. The Express server makes all provider calls and serves a one-hour cache per wiki. During a provider failure, available cached results can be shown for up to 24 additional hours. MongoDB enforces a shared rolling limit of 60 requests per hour across RosterLink instances using the same database. Share the database among instances using the same key and dedicate that key to this deployment. [Liquipedia API terms](https://liquipedia.net/api-terms-of-use).
+
+In **My Profile → Game profiles**, search Liquipedia by name or year and add a tournament to the selected game. Search covers up to 500 cached listings per wiki, and a search returns up to 20 matches. Each saved match shows its source and retrieval date. Enter your own placement and stage. The manual form and the optional PandaScore lookup remain available, and saved Liquipedia records can be edited during outages.
+
+The feed uses the public v3 tournament example and documented tournament fields. The full v3 dashboard requires signed-in access. A v3 game-catalog or player-rank endpoint could not be confirmed in the public documentation. [Official v3 example](https://liquipedia.net/commons/Support/Bot/Advanced_Usage), [tournament fields](https://liquipedia.net/commons/Help:LiquipediaDB/Tournament), [v3 dashboard](https://api.liquipedia.net/documentation/api/v3).
+
+## Review Sprint 3 recruitment locally
+
+1. Use two accounts in separate browser sessions. On the manager account, create an organization and a team, then publish an opening.
+2. On the player account, create a Player Profile. Open the published opportunity, enter an introduction and availability, and submit. Use **My Applications** from the workspace or profile to track or withdraw an active application.
+3. On the manager account, open **Review applicants** from the team’s opening. Mark the application in review, shortlist it, and send an invitation. The player can open the notification and respond. The manager can then record an acceptance or rejection.
+4. Use **My Organizations** on your player profile to jump to assigned management pages. Publish individual roles if you want a public visitor to see those affiliations.
+
+Closed and expired openings stop receiving submissions. Managers can still review existing applications. An application can have one tryout invitation, and each invitation shows the organizer’s time zone and the viewer’s local time when they differ.
 
 ## Optional PandaScore access smoke test
 

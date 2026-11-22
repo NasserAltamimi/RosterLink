@@ -9,6 +9,8 @@ export default defineConfig(({ command }) => ({
   server: {
     port: 5173,
     strictPort: true,
+    // The local Mongo database, uploaded media and review captures change while visitors browse.
+    watch: { ignored: ['**/.local-data/**'] },
     proxy: { '/api': process.env.API_TARGET || 'http://127.0.0.1:3001' },
   },
   build: { outDir: 'dist' },

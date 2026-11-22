@@ -1,3 +1,4 @@
+import { t, useLanguage } from './i18n.js';
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 // Success feedback for SF-01, SF-02 and SF-04–07 actions. Errors and field validation stay
@@ -18,12 +19,13 @@ function Toast({ toast, onDismiss }) {
   // Hovering or focusing the toast pauses automatic dismissal so it can be read or closed.
   return <div className="toast" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
     <span className="toast-icon" aria-hidden="true">✓</span>
-    <p dir="auto">{toast.message}</p>
-    <button type="button" className="toast-close" aria-label="Dismiss notification" onClick={() => onDismiss(toast.id)}>×</button>
+    <p dir="auto">{t(toast.message)}</p>
+    <button type="button" className="toast-close" aria-label={t("Dismiss notification")} onClick={() => onDismiss(toast.id)}>×</button>
   </div>;
 }
 
 export function ToastProvider({ children }) {
+  useLanguage();
   const [toasts, setToasts] = useState([]);
   const nextId = useRef(0);
   const dismiss = useCallback(id => setToasts(previous => previous.filter(toast => toast.id !== id)), []);

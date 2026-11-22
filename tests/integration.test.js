@@ -13,6 +13,8 @@ import { PlayerProfile, PlayerGame } from '../server/modules/profiles/model.js';
 import { Game } from '../server/modules/games/model.js';
 import { seedGames } from '../server/modules/games/catalog.js';
 import { syncPandaScoreGames } from '../server/modules/games/pandascore.js';
+import { syncLiquipediaGames } from '../server/modules/games/liquipedia-catalog.js';
+import { reserveLiquipediaRequest } from '../server/modules/games/liquipedia.js';
 import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from './fixtures/competition-provider.js';
 import { edgeDetails, legacyLanguage } from './fixtures/profile-edge-cases.js';
@@ -22,6 +24,7 @@ const details = { platform: 'PC', rank: 'Champion II', server: 'Middle East', la
 const profileValues = { displayName: 'PilotPlayer', bio: 'Ready to learn and compete.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] };
 const password = 'A long demo passphrase 2026!';
 let mongo, app, directory, config, game, image;
+let liquipediaUnavailable = false;
 let serial = 0;
 const newEmail = () => `test-${++serial}@example.com`;
 
@@ -32,6 +35,13 @@ before(async () => {
   mongo = await MongoMemoryServer.create({ binary: { version: '8.0.17', downloadDir: resolve('.local-data/mongodb-binaries') }, instance: { dbName: 'rosterlink_integration', dbPath: join(directory, 'mongo'), storageEngine: 'wiredTiger' } });
   config = { mongoUri: mongo.getUri('rosterlink_integration'), sessionSecret: 'integration-secret-only-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5173' };
   config.tournamentSearch = createTournamentSearch({ token: 'test-only', fetchImpl: fixtureFetch });
+  config.liquipediaTournaments = async wiki => {
+    if (!wiki) return { status: 'unsupported', tournaments: [] };
+    if (liquipediaUnavailable) return { status: 'unavailable', tournaments: [] };
+    return { status: 'ok', retrievedAt: '2026-11-20T10:00:00.000Z', tournaments: [
+      { id: 'Sample/Test_Cup', name: 'Test Cup', startDate: '2026-11-11', url: `https://liquipedia.net/${wiki}/Sample/Test_Cup` },
+    ] };
+  };
   await connectDatabase(config.mongoUri);
   await Promise.all([User.init(), PlayerProfile.init(), PlayerGame.init(), Game.init()]);
   await seedGames();
@@ -65,6 +75,15 @@ async function createProfile(user) {
   const result = await user.agent.post('/api/profiles').set('X-CSRF-Token', user.token).send(profileValues).expect(201);
   return result.body.profile;
 }
+
+test('Liquipedia request reservations enforce a shared rolling budget', async () => {
+  const budget = mongoose.connection.collection('provider_request_budgets');
+  // Seed one expired reservation and the final three slots of the current hour.
+  await budget.insertOne({ _id: 'liquipedia-v3', requests: [new Date(Date.now() - 3_600_001), ...Array(57).fill(new Date())] });
+  const reservations = await Promise.all(Array.from({ length: 10 }, () => reserveLiquipediaRequest()));
+  assert.equal(reservations.filter(Boolean).length, 3);
+  assert.equal((await budget.findOne({ _id: 'liquipedia-v3' })).requests.length, 60);
+});
 
 test('SF-06: unrelated edits preserve a valid legacy language string; unauthorized and oversized writes fail', async () => {
   // Separate limiter budgets keep this regression independent of the existing auth suite.
@@ -523,4 +542,47 @@ test('TF-03 / SF-02 / SF-04–07: account, session, profile, game and both image
   assert.deepEqual(result.body.sections[0].details, details);
   assert.ok(result.body.profile.profileImageUrl); assert.ok(result.body.profile.headerImageUrl);
   for (const kind of ['profile', 'header']) await request(app).get(`${path}/images/${kind}`).set('Cookie', cookie).expect(200);
+});
+
+test('Liquipedia catalog sync preserves an existing game and its saved rank', async () => {
+  const user = await register(), profile = await createProfile(user);
+  const saved = await PlayerGame.create({ profile: profile.id, game: game._id, schemaVersion: 2, details: { ...details, rank: 'Legacy rank' } });
+  const first = await syncLiquipediaGames();
+  assert.ok(first.added.includes('Apex Legends'));
+  assert.deepEqual(await syncLiquipediaGames(), { count: first.count, added: [] });
+  const { body } = await request(app).get('/api/games').expect(200);
+  const rocket = body.games.find(item => item.liquipediaWiki === 'rocketleague');
+  assert.equal(rocket._id, game.id);
+  assert.equal(rocket.providerId, 22);
+  assert.ok(rocket.rankOptions.includes('Champion II'));
+  const restored = await user.agent.get('/api/profiles/me').expect(200);
+  assert.equal(restored.body.sections[0].id, saved.id);
+  assert.equal(restored.body.sections[0].details.rank, 'Legacy rank');
+});
+
+test('Liquipedia profile lookup validates attribution and keeps saved tournaments editable during outages', async () => {
+  const player = await register(), profile = await createProfile(player);
+  const search = `/api/profile-tournaments/${game.id}?q=test%20cup`;
+  const path = `/api/profiles/${profile.id}/games`;
+  const headers = { 'X-CSRF-Token': player.token };
+  await request(app).get(search).expect(401);
+  const results = await player.agent.get(search).expect(200);
+  assert.deepEqual(results.body.tournaments.map(row => row.name), ['Test Cup']);
+  const entry = { name: 'Test Cup', edition: '2026', placement: 'Top 8',
+    liquipedia: { wiki: 'rocketleague', id: 'Sample/Test_Cup', retrievedAt: '2020-01-01T00:00:00.000Z' } };
+  await player.agent.post(path).set(headers).send({ gameId: game.id, details, experience: [{ ...entry, name: 'Fabricated name' }] }).expect(409);
+  const created = await player.agent.post(path).set(headers).send({ gameId: game.id, details, experience: [entry] }).expect(201);
+  assert.equal(created.body.section.experience[0].liquipedia.retrievedAt, '2026-11-20T10:00:00.000Z');
+  liquipediaUnavailable = true;
+  try {
+    await player.agent.get(search).expect(503);
+    const after = await player.agent.put(path + '/' + game.id).set(headers).send({ details, experience: [
+      { ...entry, placement: 'Top 4' }, { name: 'Community LAN', edition: '2025', placement: 'Second' },
+    ] }).expect(200);
+    assert.equal(after.body.section.experience[0].placement, 'Top 4');
+    assert.equal(after.body.section.experience[0].liquipedia.retrievedAt, '2026-11-20T10:00:00.000Z');
+    assert.equal(after.body.section.experience[1].liquipedia, undefined);
+    const publicProfile = await request(app).get(`/api/public/profiles/${profile.id}`).expect(200);
+    assert.equal(publicProfile.body.sections[0].experience[0].liquipedia.id, 'Sample/Test_Cup');
+  } finally { liquipediaUnavailable = false; }
 });

@@ -2,7 +2,10 @@ import { mkdir, writeFile, unlink, access } from 'node:fs/promises';
 import { resolve, join, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
+import multer from 'multer';
 import { HttpError } from '../lib/errors.js';
+
+export const receiveImage = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 0, parts: 1 } }).single('image');
 
 export function localImageStorage(directory) {
   const root = resolve(directory);
@@ -20,7 +23,8 @@ export function localImageStorage(directory) {
         const image = sharp(file.buffer, { limitInputPixels: 20_000_000, animated: false, failOn: 'warning' });
         const metadata = await image.metadata();
         if (metadata.format !== expectedFormats[file.mimetype] || (metadata.pages || 1) > 1) throw new Error('Invalid image format');
-        buffer = await image.rotate().resize({ width: kind === 'header' ? 1920 : 640, height: kind === 'header' ? 1080 : 640, fit: 'inside', withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
+        const bound = kind === 'post' ? 2160 : 640;
+        buffer = await image.rotate().resize({ width: kind === 'header' ? 1920 : bound, height: kind === 'header' ? 1080 : bound, fit: 'inside', withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
       } catch {
         throw new HttpError(400, 'The image could not be read. Use a valid, non-animated JPEG, PNG, or WebP under 20 megapixels.');
       }

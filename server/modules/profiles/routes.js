@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import mongoose from 'mongoose';
-import multer from 'multer';
+import { receiveImage } from '../../storage/local-images.js';
 import { z } from 'zod';
 import { requireUser } from '../auth/routes.js';
 import { PlayerProfile, PlayerGame } from './model.js';
@@ -10,6 +10,8 @@ import { sharedDetails } from '../../../shared/game-form.js';
 import { normalizeLanguages, profileLanguageLimits } from '../../../shared/languages.js';
 import { publicFieldKeys, resolvePrivacy } from '../../../shared/profile-privacy.js';
 import { HttpError, parse } from '../../lib/errors.js';
+import { profileAffiliations } from './affiliations.js';
+import { liquipediaEdition } from '../../../shared/liquipedia.js';
 
 const profileInput = z.object({
   displayName: z.string().trim().min(2, 'Enter at least 2 characters.').max(50),
@@ -48,7 +50,7 @@ async function payload(profile) {
   return { profile: profileDto(profile), sections: (await PlayerGame.find({ profile: profile._id })).map(sectionDto) };
 }
 
-export function profileRoutes(storage) {
+export function profileRoutes(storage, liquipediaTournaments) {
   const router = Router();
   router.use(requireUser);
   router.get('/me', async (req, res) => {
@@ -68,6 +70,18 @@ export function profileRoutes(storage) {
     next();
   });
   router.get('/:profileId', async (req, res) => res.json(await payload(req.profile)));
+  router.get('/:profileId/affiliations', async (req, res) => res.json({ affiliations: await profileAffiliations(req.profile) }));
+  router.patch('/:profileId/affiliations', async (req, res) => {
+    const { key, published } = parse(z.strictObject({
+      key: z.string().regex(/^(organization|team):[a-f\d]{24}$/i), published: z.boolean(),
+    }), req.body);
+    if (published && !(await profileAffiliations(req.profile)).some(item => item.key === key)) {
+      throw new HttpError(409, 'This affiliation is no longer available.');
+    }
+    await PlayerProfile.updateOne({ _id: req.profile._id, owner: req.user._id },
+      { [published ? '$addToSet' : '$pull']: { sharedAffiliations: key } });
+    res.status(204).end();
+  });
   router.put('/:profileId', async (req, res) => {
     const values = parse(profileInput, req.body);
     const profile = await PlayerProfile.findOneAndUpdate({ _id: req.profile._id, owner: req.user._id }, { $set: values }, { returnDocument: 'after', runValidators: true });
@@ -84,11 +98,29 @@ export function profileRoutes(storage) {
     res.json(await payload(profile));
   });
 
-  async function detailsFor(gameId, details, experience) {
+  async function detailsFor(gameId, details, experience, savedEntries = []) {
     validId(gameId);
     const game = await Game.findOne({ _id: gameId, enabled: true });
     if (!game) throw new HttpError(400, 'Choose a supported game.');
     if (experience?.some(entry => (entry.tournament && entry.tournament.gameId !== game.providerId) || (entry.competition && entry.competition.gameId !== game.providerId))) throw new HttpError(400, 'Select a competition for this game, or enter it manually.');
+    let feed;
+    for (const entry of experience || []) {
+      const ref = entry.liquipedia;
+      if (!ref) continue;
+      if (ref.wiki !== game.liquipediaWiki || entry.tournament || entry.competition) throw new HttpError(400, 'Select a Liquipedia tournament for this game.');
+      const saved = savedEntries.find(item => item.liquipedia?.wiki === ref.wiki && item.liquipedia.id === ref.id && item.name === entry.name && item.edition === entry.edition);
+      if (saved) {
+        ref.retrievedAt = saved.liquipedia.retrievedAt;
+        continue;
+      }
+      feed ??= await liquipediaTournaments(ref.wiki);
+      if (feed.status !== 'ok') throw new HttpError(503, 'Liquipedia could not confirm this tournament. Remove it or enter it manually.');
+      const event = feed.tournaments.find(item => item.id === ref.id && item.url);
+      if (!event || event.name.slice(0, 200).trim() !== entry.name || liquipediaEdition(event) !== entry.edition) {
+        throw new HttpError(409, 'Refresh the tournament search and select this event again, or enter it manually.');
+      }
+      ref.retrievedAt = feed.retrievedAt;
+    }
     return { details, schemaVersion: 2, ...(experience !== undefined ? { experience } : {}) };
   }
   router.post('/:profileId/games', async (req, res) => {
@@ -99,8 +131,10 @@ export function profileRoutes(storage) {
   });
   router.put('/:profileId/games/:gameId', async (req, res) => {
     const { details, experience } = parse(gameUpdate, req.body);
-    const values = await detailsFor(req.params.gameId, details, experience);
+    validId(req.params.gameId);
     const existing = await PlayerGame.findOne({ profile: req.profile._id, game: req.params.gameId });
+    if (!existing) throw new HttpError(404, 'Game section not found.');
+    const values = await detailsFor(req.params.gameId, details, experience, existing.experience);
     if (existing?.schemaVersion < 2) values.legacyDetails = Object.fromEntries(existing.details);
     const section = await PlayerGame.findOneAndUpdate({ profile: req.profile._id, game: req.params.gameId }, { $set: values }, { returnDocument: 'after', runValidators: true });
     if (!section) throw new HttpError(404, 'Game section not found.');
@@ -125,8 +159,7 @@ export function profileRoutes(storage) {
     try { path = await storage.path(key); } catch { throw new HttpError(404, 'Image not found. Please upload it again.'); }
     res.type('webp').sendFile(path, { dotfiles: 'allow' });
   });
-  const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 0, parts: 1 } });
-  router.post('/:profileId/images/:kind', upload.single('image'), async (req, res) => {
+  router.post('/:profileId/images/:kind', receiveImage, async (req, res) => {
     const key = await storage.save(req.file, req.params.kind);
     let previous;
     try {

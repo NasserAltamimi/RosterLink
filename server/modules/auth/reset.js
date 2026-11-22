@@ -41,7 +41,8 @@ export function passwordResetRoutes({ origin, resetMailer, credentials }) {
     // Do not await SMTP on the response path: network timing must not reveal an account.
     // Deliberately log only a fixed category, never provider errors or message content.
     res.status(202).json({ message: resetRequestMessage });
-    if (user) setImmediate(() => Promise.resolve().then(() => resetMailer({ email: user.email, link: link.href }))
+    const language = req.acceptsLanguages('en', 'ar') === 'ar' ? 'ar' : 'en';
+    if (user) setImmediate(() => Promise.resolve().then(() => resetMailer({ email: user.email, link: link.href, language }))
       .catch(() => console.error('Password reset email delivery failed.')));
   });
   async function findToken(token) {

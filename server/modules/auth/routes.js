@@ -28,10 +28,15 @@ export function csrfProtection(req, res, next) {
   next();
 }
 
-export async function requireUser(req, res, next) {
-  if (!req.session.userId) throw new HttpError(401, 'Please log in to continue.');
+export async function sessionUser(req) {
+  if (!req.session.userId) return null;
   const user = await User.findOne({ _id: req.session.userId, status: 'active' });
-  if (!user || (req.session.sessionVersion ?? 0) !== user.sessionVersion) throw new HttpError(401, 'Please log in to continue.');
+  return user && (req.session.sessionVersion ?? 0) === user.sessionVersion ? user : null;
+}
+
+export async function requireUser(req, res, next) {
+  const user = await sessionUser(req);
+  if (!user) throw new HttpError(401, 'Please log in to continue.');
   req.user = user;
   next();
 }
@@ -41,8 +46,7 @@ export function authRoutes({ secureCookies = false, origin, resetMailer } = {}) 
   const limiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-8', legacyHeaders: false,
     message: { message: 'Too many attempts. Please try again in 15 minutes.' } });
   router.get('/session', async (req, res) => {
-    let user = req.session.userId ? await User.findOne({ _id: req.session.userId, status: 'active' }) : null;
-    if (user && (req.session.sessionVersion ?? 0) !== user.sessionVersion) user = null;
+    const user = await sessionUser(req);
     const token = csrfToken(req);
     await saveSession(req);
     res.json({ user: user ? safeUser(user) : null, csrfToken: token });

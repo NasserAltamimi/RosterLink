@@ -9,6 +9,10 @@ async function registerApi(context, email) {
   expect(response.status()).toBe(201); return (await response.json()).csrfToken;
 }
 const write = (context, token, method, path, data) => context.request.fetch(`/api${path}`, { method, headers: { 'X-CSRF-Token': token }, data });
+async function showOpeningFilters(page) {
+  const toggle = page.getByRole('button', { name: 'Filter openings', exact: true });
+  if (await toggle.isVisible() && await toggle.getAttribute('aria-expanded') === 'false') await toggle.click();
+}
 async function fillOrg(page, name) {
   await page.getByLabel('Organization name').fill(name); await page.getByLabel('About the organization').fill('A competitive organization — فريق مستقل.'); await page.getByLabel('Organization region').fill('Saudi Arabia');
 }
@@ -29,11 +33,11 @@ async function shot(page, name, testInfo) {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 }
 
-test('SF-14/15/18/21: organization and team routes, scoped roles, openings, persistence and revocation', async ({ page, browser }, testInfo) => {
+test('SF-14/15/18/21: organization and team routes, scoped roles, openings, persistence and revocation', async ({ page, browser, baseURL }, testInfo) => {
   test.setTimeout(120000);
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   const uid = suffix(), email = `manager-${uid}@example.com`, teamEmail = `scoped-${uid}@example.com`, orgName = `Falcons ${uid}`, roleName = `Rotation ${uid}`;
-  const device = { baseURL: 'http://127.0.0.1:5174', viewport: page.viewportSize(), isMobile: testInfo.project.use.isMobile, hasTouch: testInfo.project.use.hasTouch };
+  const device = { baseURL, viewport: page.viewportSize(), isMobile: testInfo.project.use.isMobile, hasTouch: testInfo.project.use.hasTouch };
   const scopedContext = await browser.newContext(device), publicContext = await browser.newContext(device);
   try {
     const scopedToken = await registerApi(scopedContext, teamEmail);
@@ -59,7 +63,7 @@ test('SF-14/15/18/21: organization and team routes, scoped roles, openings, pers
     await expect(page.getByText('Edited team description.', { exact: true })).toBeVisible(); await page.goto(orgUrl);
     await page.locator('.roles-panel > summary').click(); await page.getByLabel('Registered user email').fill(teamEmail); await page.getByLabel('Management scope').selectOption(team.id); await page.getByRole('button', { name: 'Assign manager' }).click();
     // Reloaded memberships keep the authorization source on the server.
-    await page.locator('.roles-panel > summary').click(); await expect(page.getByRole('button', { name: `Revoke ${teamEmail} Falcons Rocket League`, exact: true })).toBeVisible(); await shot(page, 'organization-management', testInfo);
+    await expect(page.getByRole('button', { name: `Revoke ${teamEmail} Falcons Rocket League`, exact: true })).toBeVisible(); await shot(page, 'organization-management', testInfo);
     const scopedPage = await scopedContext.newPage(); await scopedPage.goto(orgUrl);
     await expect(scopedPage.getByRole('heading', { name: 'Falcons Rocket League', exact: true })).toBeVisible(); await expect(scopedPage.getByRole('heading', { name: 'Falcons Valorant', exact: true })).toHaveCount(0);
     await expect(scopedPage.getByRole('link', { name: 'Edit organization', exact: true })).toHaveCount(0); await expect(scopedPage.locator('.roles-panel')).toHaveCount(0);
@@ -75,13 +79,14 @@ test('SF-14/15/18/21: organization and team routes, scoped roles, openings, pers
     const publicPage = await publicContext.newPage(); await publicPage.goto(`/organizations/${org.id}`);
     await expect(publicPage.getByText('Edited organization — persisted after login.', { exact: true })).toBeVisible(); await expect(publicPage.locator('form')).toHaveCount(0); await shot(publicPage, 'public-organization', testInfo);
     await publicPage.getByRole('link', { name: 'Falcons Rocket League', exact: true }).click(); await expect(publicPage.getByRole('heading', { name: 'Active team openings' })).toBeVisible(); await shot(publicPage, 'public-team', testInfo);
-    await mainDestination(publicPage, 'Openings'); await publicPage.getByLabel('Game', { exact: true }).selectOption(team.game); await publicPage.getByLabel('Role', { exact: true }).fill(uid); await publicPage.getByLabel('Region', { exact: true }).fill('Middle East'); await publicPage.getByLabel('Language', { exact: true }).fill('Arabic'); await publicPage.getByRole('button', { name: 'Apply filters' }).click();
-    await expect(publicPage.getByRole('status').filter({ hasText: '1 active openings' })).toBeVisible(); const filteredUrl = publicPage.url(); await publicPage.reload(); await expect(publicPage.getByLabel('Role', { exact: true })).toHaveValue(uid); await shot(publicPage, 'filtered-openings', testInfo);
+    await mainDestination(publicPage, 'Openings'); await showOpeningFilters(publicPage); await publicPage.getByLabel('Game', { exact: true }).selectOption(team.game); await publicPage.getByLabel('Role', { exact: true }).fill(uid); await publicPage.getByLabel('Region', { exact: true }).fill('Middle East'); await publicPage.getByLabel('Language', { exact: true }).fill('Arabic'); await publicPage.getByRole('button', { name: 'Apply filters' }).click();
+    await expect(publicPage.getByRole('status').filter({ hasText: /^1 active opening$/ })).toBeVisible(); const filteredUrl = publicPage.url(); await publicPage.reload(); await expect(publicPage.getByLabel('Role', { exact: true })).toHaveValue(uid); await shot(publicPage, 'filtered-openings', testInfo);
     await publicPage.getByRole('link', { name: roleName, exact: true }).click(); await expect(publicPage.getByText('Updated Rocket League 3v3 requirements.', { exact: true })).toBeVisible(); await publicPage.goBack(); await expect(publicPage).toHaveURL(filteredUrl); await expect(publicPage.getByLabel('Role', { exact: true })).toHaveValue(uid); await publicPage.goForward(); await expect(publicPage.getByRole('heading', { level: 1, name: roleName, exact: true })).toBeVisible();
     await logout(page); await page.getByLabel('Email address').fill(email); await page.getByLabel(/^Password/).fill(password); await page.getByRole('button', { name: 'Log in', exact: true }).click(); await expect(page.getByRole('heading', { name: 'My Workspace', exact: true })).toBeVisible(); await page.goto(orgUrl);
     await page.locator('.roles-panel > summary').click(); await page.getByRole('button', { name: `Revoke ${teamEmail} Falcons Rocket League`, exact: true }).click();
     await scopedPage.getByRole('button', { name: 'Close opening', exact: true }).click(); await expect(scopedPage.getByRole('alert')).toHaveText('You cannot manage this team.');
-    await page.goto(teamUrl); await page.getByRole('button', { name: 'Close opening', exact: true }).click(); await expect(page.getByText(/^Closed ·/)).toBeVisible();
+    await page.goto(teamUrl); const openingRow = page.getByRole('article').filter({ has: page.getByRole('heading', { name: roleName, exact: true }) });
+    await openingRow.getByRole('button', { name: 'Close opening', exact: true }).click(); await expect(openingRow.getByText('Closed', { exact: true })).toBeVisible();
     await publicPage.goto(`/openings?role=${uid}`); await expect(publicPage.getByRole('heading', { name: 'No active openings found.' })).toBeVisible(); await publicPage.goto(`/openings/${saved.id}`); await expect(publicPage.getByText('Closed', { exact: true })).toBeVisible();
     expect(errors).toEqual([]);
   } finally { await scopedContext.close(); await publicContext.close(); }
@@ -91,7 +96,7 @@ test('SF-14/21: signed-out, loading, empty, failure/retry, validation and not-fo
   await page.goto('/organizations'); await expect(page.getByRole('heading', { name: 'Log in to continue.' })).toBeVisible(); await expect(page.locator('form')).toHaveCount(0);
   await page.route('**/api/openings*', async route => { await new Promise(resolve => setTimeout(resolve, 500)); await route.abort(); });
   await page.goto('/openings'); await expect(page.getByRole('status').filter({ hasText: 'Loading your workspace' }).first()).toBeVisible(); await expect(page.getByRole('alert')).toContainText('Cannot connect');
-  await page.unroute('**/api/openings*'); await page.getByRole('button', { name: 'Try again' }).click(); await expect(page.getByRole('button', { name: 'Apply filters' })).toBeVisible();
+  await page.unroute('**/api/openings*'); await page.getByRole('button', { name: 'Try again' }).click(); await showOpeningFilters(page); await expect(page.getByRole('button', { name: 'Apply filters' })).toBeVisible();
   await page.getByLabel('Role', { exact: true }).fill('no-such-role-' + suffix()); await page.getByRole('button', { name: 'Apply filters' }).click(); await expect(page.getByRole('heading', { name: 'No active openings found.' })).toBeVisible();
   await page.goto('/organizations/bad'); await expect(page.getByRole('alert')).toHaveText('Page not found.');
   await registerApi(page.context(), `invalid-${suffix()}@example.com`); await page.goto('/organizations'); await expect(page.getByRole('heading', { name: 'Build something together.' })).toBeVisible();

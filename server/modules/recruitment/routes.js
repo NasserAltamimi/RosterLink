@@ -1,12 +1,15 @@
 import { Router } from 'express';
+import { Types } from 'mongoose';
 import { z } from 'zod';
-import { Organization, Team, Opening } from './models.js';
+import { Application, Organization, Team, Opening, organizationLogo } from './models.js';
 import { requireUser } from '../auth/routes.js';
 import { User } from '../auth/model.js';
+import { PlayerProfile } from '../profiles/model.js';
 import { Game } from '../games/model.js';
 import { HttpError, parse } from '../../lib/errors.js';
 import { platforms } from '../../../shared/game-form.js';
 import { scheduleDays, scheduleTimes, sortSchedule, formatSchedule, scheduleOverlaps } from '../../../shared/schedule.js';
+import { receiveImage } from '../../storage/local-images.js';
 
 const id = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid identifier.');
 const text = max => z.string().trim().min(1, 'This field is required.').max(max);
@@ -33,9 +36,10 @@ const openingValues = z.object({ role: text(100), requirements: text(2000), plat
   timezone: text(100).refine(value => { try { new Intl.DateTimeFormat('en', { timeZone: value }); return true; } catch { return false; } }, 'Use a valid timezone, e.g. Asia/Riyadh.'),
   deadline: z.iso.datetime({ offset: true }).refine(value => new Date(value).getTime() > Date.now(), 'Choose a future deadline.'),
 }).strict().transform(values => ({ ...values, scheduleSlots: sortSchedule(values.scheduleSlots), schedule: formatSchedule(values.scheduleSlots) }));
-const has = (list, user) => list.some(value => String(value) === String(user));
-const clean = doc => { const { _id, __v, managers, createdBy, updatedBy, closedBy, ...values } = doc.toObject ? doc.toObject() : doc; return { id: String(_id), ...values }; };
-const get = async (Model, value) => { if (!id.safeParse(value).success) throw new HttpError(404, 'Page not found.'); const doc = await Model.findById(value); if (!doc) throw new HttpError(404, 'Page not found.'); return doc; };
+export const has = (list, user) => list.some(value => String(value) === String(user));
+const clean = doc => { const { _id, __v, managers, logoImage, createdBy, updatedBy, closedBy, lastApplicationAdmissionAt, ...values } = doc.toObject ? doc.toObject() : doc; return { id: String(_id), ...values }; };
+const organizationDto = org => ({ ...clean(org), logoUrl: organizationLogo(org) });
+export const get = async (Model, value) => { if (!id.safeParse(value).success) throw new HttpError(404, 'Page not found.'); const doc = await Model.findById(value); if (!doc) throw new HttpError(404, 'Page not found.'); return doc; };
 // Read current memberships from MongoDB on every authorized request.
 // Revoked managers therefore lose access without needing to log out.
 async function orgManager(req, orgId) {
@@ -46,25 +50,31 @@ async function orgManager(req, orgId) {
   return org;
 }
 
-async function teamManager(req, teamId) {
+export const canManageTeam = (team, organization, userId) => has(team.managers, userId) || has(organization.managers, userId);
+
+export async function teamManager(req, teamId) {
   const team = await get(Team, teamId);
   const org = await get(Organization, String(team.organization));
 
   // Organization managers can manage every team under their organization.
   // Team managers can manage only the specific team containing their user ID.
-  if (!has(org.managers, req.user.id) && !has(team.managers, req.user.id)) {
+  if (!canManageTeam(team, org, req.user.id)) {
     throw new HttpError(403, 'You cannot manage this team.');
   }
   return team;
 }
+export async function managedTeams(userId, organizationIds) {
+  const owned = organizationIds ?? await Organization.find({ managers: userId }).distinct('_id');
+  return Team.find({ $or: [{ organization: { $in: owned } }, { managers: userId }] });
+}
 async function decoratedOpenings(query) {
-  const rows = await Opening.find(query).sort({ createdAt: -1, _id: -1 }).populate({ path: 'team', populate: { path: 'organization', select: 'name' } }).populate('game', 'name').lean();
+  const rows = await Opening.find(query).sort({ createdAt: -1, _id: -1 }).populate({ path: 'team', populate: { path: 'organization', select: 'name logoImage updatedAt' } }).populate('game', 'name').lean();
   return rows.map(row => ({ ...clean(row), team: row.team?._id.toString(), teamName: row.team?.name,
-    organizationId: row.team?.organization?._id.toString(), organizationName: row.team?.organization?.name,
+    organizationId: row.team?.organization?._id.toString(), organizationName: row.team?.organization?.name, organizationLogoUrl: organizationLogo(row.team?.organization),
     game: row.game?._id.toString(), gameName: row.game?.name, expired: row.deadline <= new Date() }));
 }
 
-export function recruitmentRoutes() {
+export function recruitmentRoutes(storage) {
   const router = Router();
   router.get('/openings', async (req, res) => {
     const filters = parse(z.object({ game: id.optional(), role: text(100).optional(), region: text(100).optional(), language: text(100).optional() }).strict(), req.query);
@@ -78,30 +88,65 @@ export function recruitmentRoutes() {
   router.get('/organizations/:id', async (req, res) => {
     const organization = await get(Organization, req.params.id);
     const teams = await Team.find({ organization: organization._id }).populate('game', 'name');
-    res.json({ organization: clean(organization), teams: teams.map(team => ({ ...clean(team), game: String(team.game._id), gameName: team.game.name })) });
+    const openings = await decoratedOpenings({ team: { $in: teams.map(team => team._id) }, status: 'active', deadline: { $gt: new Date() } });
+    res.json({ organization: organizationDto(organization), teams: teams.map(team => ({ ...clean(team), game: String(team.game._id), gameName: team.game.name })), openings });
+  });
+  router.get('/organizations/:id/logo', async (req, res) => {
+    const org = await get(Organization, req.params.id);
+    if (!org.logoImage) throw new HttpError(404, 'Logo not found.');
+    let path;
+    try { path = await storage.path(org.logoImage); } catch { throw new HttpError(404, 'Logo not found.'); }
+    res.type('webp').sendFile(path, { dotfiles: 'allow' });
   });
   router.get('/teams/:id', async (req, res) => {
     const team = await get(Team, req.params.id), org = await get(Organization, String(team.organization)), game = await Game.findById(team.game);
-    res.json({ team: { ...clean(team), gameName: game?.name, organizationName: org.name }, openings: await decoratedOpenings({ team: team._id, status: 'active', deadline: { $gt: new Date() } }) });
+    res.json({ team: { ...clean(team), gameName: game?.name, organizationName: org.name, organizationLogoUrl: organizationLogo(org) }, openings: await decoratedOpenings({ team: team._id, status: 'active', deadline: { $gt: new Date() } }) });
   });
   router.use(['/management', '/organizations', '/teams', '/openings'], requireUser);
   router.get('/management', async (req, res) => {
     const owned = await Organization.find({ managers: req.user._id });
-    const teams = await Team.find({ $or: [{ organization: { $in: owned.map(org => org._id) } }, { managers: req.user._id }] }).populate('game', 'name');
+    const teams = await managedTeams(req.user._id, owned.map(org => org._id));
+    await Team.populate(teams, { path: 'game', select: 'name' });
     const organizations = await Organization.find({ _id: { $in: [...owned.map(org => org._id), ...teams.map(team => team.organization)] } });
-    res.json({ organizations: organizations.map(org => ({ ...clean(org), canManage: has(org.managers, req.user.id) })),
+    const openings = await decoratedOpenings({ team: { $in: teams.map(team => team._id) } });
+    const counts = await Application.aggregate([
+      { $match: { opening: { $in: openings.map(opening => new Types.ObjectId(opening.id)) }, player: { $ne: req.user._id } } },
+      { $group: { _id: '$opening', total: { $sum: 1 }, submitted: { $sum: { $cond: [{ $eq: ['$status', 'submitted'] }, 1, 0] } } } },
+    ]);
+    const applicants = new Map(counts.map(({ _id, total, submitted }) => [String(_id), { total, submitted }]));
+    res.json({ organizations: organizations.map(org => ({ ...organizationDto(org), canManage: has(org.managers, req.user.id) })),
       teams: teams.map(team => ({ ...clean(team), game: String(team.game._id), gameName: team.game.name })),
-      openings: await decoratedOpenings({ team: { $in: teams.map(team => team._id) } }) });
+      openings: openings.map(opening => ({ ...opening, applicantCounts: applicants.get(opening.id) || { total: 0, submitted: 0 } })) });
   });
   router.post('/organizations', async (req, res) => {
     const values = parse(orgValues, req.body);
-    res.status(201).json({ organization: clean(await Organization.create({ ...values, managers: [req.user._id] })) });
+    res.status(201).json({ organization: organizationDto(await Organization.create({ ...values, managers: [req.user._id] })) });
   });
   router.put('/organizations/:id', async (req, res) => {
     const org = await orgManager(req, req.params.id), values = parse(orgValues, req.body);
     const saved = await Organization.findOneAndUpdate({ _id: org._id, managers: req.user._id }, { $set: values }, { returnDocument: 'after', runValidators: true });
     if (!saved) throw new HttpError(403, 'Organization manager permission is required.');
-    res.json({ organization: clean(saved) });
+    res.json({ organization: organizationDto(saved) });
+  });
+  router.post('/organizations/:id/logo', async (req, res, next) => {
+    req.organization = await orgManager(req, req.params.id);
+    next();
+  }, receiveImage, async (req, res) => {
+    const key = await storage.save(req.file, 'profile');
+    let previous;
+    try {
+      previous = await Organization.findOneAndUpdate({ _id: req.organization._id, managers: req.user._id }, { $set: { logoImage: key } });
+      if (!previous) throw new HttpError(403, 'Organization manager permission is required.');
+    } catch (error) { await storage.remove(key); throw error; }
+    await storage.remove(previous.logoImage);
+    res.json({ organization: organizationDto(await Organization.findById(previous._id)) });
+  });
+  router.delete('/organizations/:id/logo', async (req, res) => {
+    const org = await orgManager(req, req.params.id);
+    const previous = await Organization.findOneAndUpdate({ _id: org._id, managers: req.user._id }, { $unset: { logoImage: 1 } });
+    if (!previous) throw new HttpError(403, 'Organization manager permission is required.');
+    await storage.remove(previous.logoImage);
+    res.json({ organization: organizationDto(await Organization.findById(previous._id)) });
   });
   router.post('/organizations/:id/teams', async (req, res) => {
     const org = await orgManager(req, req.params.id), { gameId, ...values } = parse(teamValues, req.body);
@@ -138,9 +183,11 @@ export function recruitmentRoutes() {
       const team = await get(Team, teamId);
       if (String(team.organization) !== org.id) throw new HttpError(403, 'This team belongs to another organization.');
       await Team.updateOne({ _id: team._id, organization: org._id }, { $pull: { managers: userId } });
+      await PlayerProfile.updateOne({ owner: userId }, { $pull: { sharedAffiliations: `team:${team.id}` } });
     } else {
       const result = await Organization.updateOne({ _id: org._id, managers: req.user._id, $or: [{ managers: { $ne: userId } }, { $expr: { $gt: [{ $size: '$managers' }, 1] } }] }, { $pull: { managers: userId } });
       if (!result.matchedCount) throw new HttpError(409, 'Keep at least one organization manager.');
+      await PlayerProfile.updateOne({ owner: userId }, { $pull: { sharedAffiliations: `organization:${org.id}` } });
     }
     res.status(204).end();
   });

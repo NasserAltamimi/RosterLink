@@ -7,22 +7,22 @@ import { connectDatabase } from '../server/db.js';
 import { User } from '../server/modules/auth/model.js';
 import { PlayerProfile, PlayerGame } from '../server/modules/profiles/model.js';
 import { Game } from '../server/modules/games/model.js';
-import { seedGames } from '../server/modules/games/catalog.js';
+import { syncLiquipediaGames } from '../server/modules/games/liquipedia-catalog.js';
 import { createTournamentSearch } from '../server/modules/games/tournaments.js';
 import { fixtureFetch } from '../tests/fixtures/competition-provider.js';
 import { hashPassword } from '../server/modules/auth/passwords.js';
 import { edgeAccount, edgeDetails } from '../tests/fixtures/profile-edge-cases.js';
 import { recruitmentModels } from '../server/modules/recruitment/models.js';
+import { postModels } from '../server/modules/posts/models.js';
+import { createLiquipediaTournaments } from '../server/modules/games/liquipedia.js';
 
 await mkdir('.local-data', { recursive: true });
 const directory = await mkdtemp(resolve('.local-data/browser-'));
 const mongo = await MongoMemoryServer.create({ binary: { version: '8.0.17', downloadDir: resolve('.local-data/mongodb-binaries') }, instance: { dbName: 'rosterlink_browser', storageEngine: 'wiredTiger' } });
 const mongoUri = mongo.getUri('rosterlink_browser');
 await connectDatabase(mongoUri);
-await Promise.all([User, PlayerProfile, PlayerGame, Game, ...recruitmentModels].map(model => model.init()));
-await seedGames();
-await Game.create({ slug: 'local-valorant', providerId: 26, name: 'Valorant', enabled: true, schemaVersion: 2, fields: [] });
-await Game.create({ slug: 'local-mobile-legends', providerId: 34, name: 'Mobile Legends: Bang Bang', enabled: true, schemaVersion: 2, fields: [] });
+await Promise.all([User, PlayerProfile, PlayerGame, Game, ...recruitmentModels, ...postModels].map(model => model.init()));
+await syncLiquipediaGames();
 // Simulate records saved before the language picker. This database is disposable.
 const edgeUser = await User.create({ email: edgeAccount.email, passwordHash: await hashPassword(edgeAccount.password) });
 const edgeProfile = await PlayerProfile.create({ owner: edgeUser._id, displayName: 'W'.repeat(50), bio: 'Synthetic public-profile regression fixture.', region: 'Saudi Arabia', languages: ['Arabic', 'English'] });
@@ -37,7 +37,10 @@ const resetMailer = async message => {
   if (!/^recovery-[a-z0-9-]+@example\.com$/.test(message.email)) return;
   await writeFile(join(mailbox, `${message.email}.json`), JSON.stringify(message), { mode: 0o600 });
 };
-const app = createApp({ mongoUri, sessionSecret: 'browser-tests-only-secret-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5174', tournamentSearch, resetMailer });
+const liquipediaTournaments = createLiquipediaTournaments({ apiKey: 'browser-fixture', fetchImpl: async url => url.searchParams.get('wiki') === 'fortnite'
+    ? { ok: true, status: 200, json: async () => ({ result: [{ pagename: 'Fixture/Cup', name: 'Fixture Community Cup', startdate: '2026-06-10' }] }) }
+    : { ok: false, status: 503 } });
+const app = createApp({ mongoUri, sessionSecret: 'browser-tests-only-secret-'.repeat(3), uploadDir: join(directory, 'images'), origin: 'http://127.0.0.1:5174', tournamentSearch, liquipediaTournaments, resetMailer });
 const server = app.listen(3002, '127.0.0.1', () => console.log('Browser test API ready. Uses an isolated real MongoDB database.'));
 const stop = () => server.close(async () => {
   await app.locals.sessionStore.close(); await mongoose.disconnect(); await mongo.stop();

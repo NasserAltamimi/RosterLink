@@ -404,3 +404,52 @@ summary:focus-visible { outline: 3px solid #659966; outline-offset: -4px; }
   .roles-panel > summary { padding: 20px; }
   .sign-in-state { padding: 24px; margin-block: 16px; }
 }
+.header-user-tools { display: flex; align-items: center; gap: 8px; }
+.notification-link { padding-inline: 12px; position: relative; }
+.unread-dot { position: absolute; inset-block-start: 6px; inset-inline-end: 8px; width: 8px; height: 8px; border-radius: 50%; background: #346946; }
+.notification-link[aria-current] { background: #e9efdf; }
+.recruiting-hero { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: clamp(22px, 5vw, 42px); margin-block: 10px 24px; background: #153e34; color: #f5f9f3; border-radius: 16px; }
+.recruiting-hero h1 { margin-block: 4px 8px; color: inherit; }
+.recruiting-hero p { margin: 0; color: #dce9dc; }
+.recruiting-hero .eyebrow { color: #c6d9af; }
+.recruiting-hero-actions, .profile-quick-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.profile-quick-actions { margin-block-end: 18px; }
+.recruiting-hero .button.primary { background: #dce8c7; color: #153e34; }
+.application-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); align-items: start; gap: 20px; }
+.application-layout .form-card { margin: 0; }
+.application-detail-layout { grid-template-areas: "answers actions"; }
+.application-detail-layout .application-sidebar { grid-area: actions; }
+.application-answers { grid-area: answers; }
+.invitation-context { padding-block: 14px 2px; border-block-start: 1px solid var(--border); }
+.invitation-context p { margin-block: 10px; }
+.opening-layout .game-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.recruitment-list { display: grid; gap: 14px; }
+.application-invitation :is(h2, h3), .profile-organizations h2 { display: flex; gap: 8px; align-items: center; }
+.recruitment-context, .recruitment-actions, .confirm-action { display: flex; flex-wrap: wrap; gap: 10px; margin-block: 12px 0; }
+.recruitment-context { margin-block-end: 18px; }
+.confirm-action p { flex-basis: 100%; }
+.application-sidebar form .button + .button { margin-inline-start: 8px; }
+.recruitment-filter { padding: 14px 20px; margin-block: 16px; }
+.recruitment-filter .field { max-width: 320px; margin: 0; }
+.application-row, .recruitment-inline { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 24px; }
+.application-row h2 { font-size: 1.15rem; margin-block: 4px; }
+.application-row p, .recruitment-inline p { margin: 4px 0; }
+.application-row-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; }
+.application-status { display: inline-block; width: max-content; padding: 5px 10px; border-radius: 999px; color: #31445d; background: #e9eef6; font-size: .8rem; font-weight: 700; }
+.application-status[data-status="shortlisted"], .application-status[data-status="accepted"] { color: #184f35; background: #e2f2e5; }
+.application-status[data-status="rejected"], .application-status[data-status="withdrawn"] { color: #614445; background: #f5eaea; }
+.notification-list, .affiliation-list { list-style: none; padding: 0; margin-block: 16px; }
+.notification-list [data-unread="true"] { border-inline-start: 4px solid #52705a; }
+.affiliation-list li { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; border-block-start: 1px solid var(--border); padding-block: 12px; }
+.affiliation-list li p { margin: 4px 0 0; }
+.affiliation-name { font-weight: 700; }
+.affiliation-toggle { display: inline-flex; gap: 8px; align-items: center; }
+.affiliation-toggle input { width: 18px; height: 18px; accent-color: #153e34; }
+@media (max-width: 740px) {
+  .application-layout { grid-template-columns: minmax(0, 1fr); }
+  .application-detail-layout { grid-template-areas: "actions" "answers"; }
+  .recruiter-detail { grid-template-areas: "answers" "actions"; }
+  .recruiting-hero, .application-row, .recruitment-inline { align-items: start; flex-direction: column; }
+  .application-row-actions { justify-content: flex-start; }
+  .recruiting-hero h1 { font-size: clamp(1.8rem, 7vw, 2.5rem); }
+}

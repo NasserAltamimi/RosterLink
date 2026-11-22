@@ -1,3 +1,4 @@
+import { errorText, t } from './i18n.js';
 import { useId } from 'react';
 import { OTHER_LANGUAGE, standardLanguages } from '../shared/languages.js';
 
@@ -15,14 +16,14 @@ export default function LanguagePicker({ label, selection, onChange, error, help
   return <fieldset className="field language-picker" aria-describedby={describedBy} disabled={disabled}>
     <legend>{label}{required && <span aria-hidden="true"> *</span>}</legend>
     <div className="language-options">
-      {standardLanguages.map((language, index) => option(language, language, selection.selected.includes(language), () => toggle(language), index === 0 ? focusRef : undefined))}
-      {option(OTHER_LANGUAGE, OTHER_LANGUAGE, selection.other, () => onChange({ ...selection, other: !selection.other }))}
+      {standardLanguages.map((language, index) => option(language, t(language), selection.selected.includes(language), () => toggle(language), index === 0 ? focusRef : undefined))}
+      {option(OTHER_LANGUAGE, t(OTHER_LANGUAGE), selection.other, () => onChange({ ...selection, other: !selection.other }))}
     </div>
     {selection.other && <div className="language-custom">
-      <label htmlFor={`${id}-custom`}>Other language(s)<span aria-hidden="true"> *</span></label>
-      <input id={`${id}-custom`} type="text" required maxLength={customMaxLength} value={selection.custom} onChange={event => onChange({ ...selection, custom: event.target.value })} disabled={disabled} aria-invalid={Boolean(error)} aria-describedby={`${id}-custom-help`} dir="auto" placeholder="e.g. French" autoComplete="off" />
-      <p className="field-help" id={`${id}-custom-help`}>Separate more than one language with commas.</p>
+      <label htmlFor={`${id}-custom`}>{t("Other language(s)")}<span aria-hidden="true"> *</span></label>
+      <input id={`${id}-custom`} type="text" required maxLength={customMaxLength} value={selection.custom} onChange={event => onChange({ ...selection, custom: event.target.value })} disabled={disabled} aria-invalid={Boolean(error)} aria-describedby={`${id}-custom-help`} dir="auto" placeholder={t("e.g. French")} autoComplete="off" />
+      <p className="field-help" id={`${id}-custom-help`}>{t("Separate more than one language with commas.")}</p>
     </div>}
-    {error ? <p className="field-error" id={`${id}-error`}>{error}</p> : help ? <p className="field-help" id={`${id}-help`}>{help}</p> : null}
+    {error ? <p className="field-error" id={`${id}-error`}>{errorText(error)}</p> : help ? <p className="field-help" id={`${id}-help`}>{help}</p> : null}
   </fieldset>;
 }

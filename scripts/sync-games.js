@@ -1,14 +1,16 @@
 import mongoose from 'mongoose';
 import { readConfig } from '../server/config.js';
 import { connectDatabase } from '../server/db.js';
-import { seedGames } from '../server/modules/games/catalog.js';
-import { syncPandaScoreGames } from '../server/modules/games/pandascore.js';
+import { Game } from '../server/modules/games/model.js';
+import { syncLiquipediaGames } from '../server/modules/games/liquipedia-catalog.js';
 
 try {
   await connectDatabase(readConfig().mongoUri);
-  await seedGames();
-  const result = await syncPandaScoreGames({ token: process.env.PANDASCORE_API_TOKEN });
-  console.log(`Synced ${result.count} PandaScore games; ${result.withImages} include API images.`);
+  await Game.init();
+  const before = await Game.countDocuments({ enabled: true });
+  const { count, added } = await syncLiquipediaGames();
+  console.log(`Enabled games: ${before} → ${count}.`);
+  if (added.length) console.log(`Added: ${added.join(', ')}.`);
 } catch (error) {
   console.error(`Game sync failed: ${error.message}`);
   process.exitCode = 1;

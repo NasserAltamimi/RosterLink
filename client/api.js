@@ -1,3 +1,5 @@
+import { getLanguage } from './i18n.js';
+
 let csrfToken;
 
 export class ApiError extends Error {
@@ -6,7 +8,7 @@ export class ApiError extends Error {
 
 export async function api(path, { method = 'GET', body, timeout = 15000 } = {}) {
   if (method !== 'GET' && !csrfToken) await api('/auth/session');
-  const headers = {};
+  const headers = { 'Accept-Language': getLanguage() };
   if (method !== 'GET') headers['X-CSRF-Token'] = csrfToken || '';
   if (body && !(body instanceof FormData)) headers['Content-Type'] = 'application/json';
   let response;
@@ -29,6 +31,26 @@ export async function api(path, { method = 'GET', body, timeout = 15000 } = {}) 
   }
   if (data.csrfToken) csrfToken = data.csrfToken;
   return data;
+}
+
+export async function uploadPost(path, method, body, onProgress) {
+  if (!csrfToken) await api('/auth/session');
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, '/api' + path);
+    xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+    xhr.responseType = 'json';
+    xhr.timeout = 120000;
+    xhr.upload.onprogress = event => {
+      if (event.lengthComputable) onProgress(Math.round(event.loaded * 100 / event.total));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.response);
+      else reject(new ApiError(xhr.response?.message || 'Upload failed. Try again.', xhr.status, xhr.response?.fields));
+    };
+    xhr.onerror = xhr.ontimeout = () => reject(new ApiError('Connection interrupted. Your draft is ready to retry.', 0));
+    xhr.send(body);
+  });
 }
 
 export async function endSession() {

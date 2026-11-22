@@ -4,11 +4,13 @@ import { PlayerProfile, PlayerGame } from './model.js';
 import { sharedDetails } from '../../../shared/game-form.js';
 import { publicFieldOptions, resolvePrivacy } from '../../../shared/profile-privacy.js';
 import { HttpError } from '../../lib/errors.js';
+import { profileAffiliations } from './affiliations.js';
 
 // SF-13: read-only public view of a player profile, reachable without logging in.
 // The DTO is an allow-list: no owner, email, storage keys, or legacy (pre-v2) details.
 // SF-08: fields the player hid are left out of the response entirely, not sent as null.
 const publicImage = (profile, kind) => `/api/public/profiles/${profile.id}/images/${kind}?v=${profile.updatedAt.getTime()}`;
+export const publicAvatar = profile => profile.profileImage && resolvePrivacy(profile).publicFields.profileImage ? publicImage(profile, 'profile') : null;
 const hiddenDetails = shown => publicFieldOptions.filter(option => option.detail && !shown[option.key]).map(option => option.detail);
 
 function publicProfileDto(profile, sections) {
@@ -20,7 +22,7 @@ function publicProfileDto(profile, sections) {
       ...(shown.bio && { bio: profile.bio }),
       ...(shown.region && { region: profile.region }),
       ...(shown.languages && { languages: profile.languages }),
-      ...(shown.profileImage && { profileImageUrl: profile.profileImage ? publicImage(profile, 'profile') : null }),
+      ...(shown.profileImage && { profileImageUrl: publicAvatar(profile) }),
       ...(shown.headerImage && { headerImageUrl: profile.headerImage ? publicImage(profile, 'header') : null }),
     },
     sections: sections.map(section => {
@@ -41,7 +43,14 @@ export function publicProfileRoutes(storage) {
     next();
   });
   router.get('/:profileId', async (req, res) => {
-    res.json(publicProfileDto(req.profile, await PlayerGame.find({ profile: req.profile._id })));
+    const sections = await PlayerGame.find({ profile: req.profile._id });
+    const dto = publicProfileDto(req.profile, sections);
+    if (req.profile.sharedAffiliations?.length) {
+      const affiliations = (await profileAffiliations(req.profile)).filter(item => item.published)
+        .map(({ published, key, ...item }) => item);
+      if (affiliations.length) dto.profile.affiliations = affiliations;
+    }
+    res.json(dto);
   });
   router.get('/:profileId/images/:kind', async (req, res) => {
     const field = { profile: 'profileImage', header: 'headerImage' }[req.params.kind];
