@@ -21,6 +21,13 @@ export const PostReaction = mongoose.model('PostReaction', new mongoose.Schema({
 }, options));
 PostReaction.schema.index({ post: 1, user: 1 }, { unique: true });
 
+export const PostBookmark = mongoose.model('PostBookmark', new mongoose.Schema({
+  post: ref('Post'),
+  user: ref('User'),
+}, options));
+PostBookmark.schema.index({ user: 1, post: 1 }, { unique: true });
+PostBookmark.schema.index({ user: 1, createdAt: -1, _id: -1 });
+
 export const PostComment = mongoose.model('PostComment', new mongoose.Schema({
   post: ref('Post'),
   user: ref('User'),
@@ -39,4 +46,4 @@ const followSchema = new mongoose.Schema({
 followSchema.index({ user: 1, kind: 1, target: 1 }, { unique: true });
 followSchema.index({ kind: 1, target: 1, active: 1 });
 export const Follow = mongoose.model('Follow', followSchema);
-export const postModels = [Post, PostReaction, PostComment, Follow];
+export const postModels = [Post, PostReaction, PostComment, Follow, PostBookmark];

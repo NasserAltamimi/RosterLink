@@ -47,12 +47,13 @@ export default function Feed({ user }) {
   const notify = useToast();
   const params = new URLSearchParams(location.search);
   const accounts = params.get('find') === 'accounts';
+  const saved = !accounts && params.get('tab') === 'saved';
   const tab = ['all','following'].includes(params.get('tab')) ? params.get('tab') : '';
   const q = (params.get('q') || '').slice(0,100);
   const mode = accounts ? 'accounts' : 'posts';
   const query = new URLSearchParams({q});
   if (tab) query.set('tab',tab);
-  const path = '/discovery/feed?' + query;
+  const path = saved ? '/discovery/saved-posts' : '/discovery/feed?' + query;
   return <div className="discovery-feed"><header className="directory-heading discovery-heading"><span className="destination-icon"><Newspaper aria-hidden="true"/></span><div><h1>{t("Feed")}</h1><p className="muted">{t("Highlights, match results and roster updates.")}</p></div>
     {user && <button className="button primary feed-publish" aria-expanded={composing} onClick={()=>setComposing(true)}><SquarePen size={17}/>{' ' + t("Create post")}</button>}</header>
     {composing && user && <FeedComposer onCancel={()=>setComposing(false)} onSaved={()=>{
@@ -61,28 +62,38 @@ export default function Feed({ user }) {
     <div className="feed-layout"><aside className="feed-tools">
     <nav className="feed-modes" aria-label={t("Search in")}><a href={feedUrl('posts',tab,'')} aria-current={!accounts?'page':undefined}>{t("Posts")}</a>
       <a href={feedUrl('accounts',tab,'')} aria-current={accounts?'page':undefined}>{t("Find accounts")}</a></nav>
-    <SearchForm key={mode+':'+q} accounts={accounts} query={q} onSearch={value=>navigate(feedUrl(mode,tab,value))}/>
+    {!saved && <SearchForm key={mode+':'+q} accounts={accounts} query={q} onSearch={value=>navigate(feedUrl(mode,tab,value))}/>}
     </aside><section className="feed-stream" aria-label={accounts ? t("Account results") : t("Posts")}>
     {accounts ? <Accounts key={q} path={'/discovery/accounts?'+new URLSearchParams({q})} user={user}
       empty={<section className="card empty-state"><h2>{t("No matching accounts")}</h2><a href={feedUrl(mode,tab,'')}>{t("Show all accounts")}</a></section>}/> :
-      <Timeline key={path+revision} path={path} user={user} q={q}/>}
+      saved && !user ? <section className="card empty-state">
+        <h2>{t('Log in to view saved posts')}</h2>
+        <a href={'/login?' + new URLSearchParams({ next: feedUrl('posts','saved','') })}>{t('Log in')}</a>
+      </section> : <Timeline key={path+revision} path={path} user={user} q={saved ? '' : q} saved={saved}/>}
     </section></div></div>;
 }
 
-function Timeline({ path,user,q }) {
+function Timeline({ path,user,q,saved }) {
   const result = useResource(path);
   return <Result resource={result}>{data=><>
     <nav className="game-shortcuts feed-tabs" aria-label={t("Post timeline")}>
       {user && <a href={feedUrl('posts','following',q)} aria-current={data.tab==='following'?'page':undefined}>{t("Following")}</a>}
       <a href={feedUrl('posts','all',q)} aria-current={data.tab==='all'?'page':undefined}>{t("All")}</a>
+      {user && <a href={feedUrl('posts','saved','')} aria-current={saved?'page':undefined}>{t('Saved')}</a>}
     </nav>
-    <PagedResults initial={data} itemsKey="posts" cursorKey="nextCursor" load={before=>api('/discovery/feed?'+new URLSearchParams({tab:data.tab,q,before}))}
-      empty={<section className="card empty-state"><h2>{q?t("No matching posts"):data.tab==='following'?t("No posts from accounts you follow yet"):t("No posts yet")}</h2>
+    <PagedResults initial={data} itemsKey="posts" cursorKey="nextCursor"
+      load={before=>api(saved
+        ? path + '?' + new URLSearchParams({ before })
+        : '/discovery/feed?' + new URLSearchParams({ tab:data.tab, q, before }))}
+      empty={saved ? <section className="card empty-state"><h2>{t('No saved posts yet')}</h2>
+        <a href={feedUrl('posts','all','')}>{t('View all posts')}</a></section> :
+        <section className="card empty-state"><h2>{q?t("No matching posts"):data.tab==='following'?t("No posts from accounts you follow yet"):t("No posts yet")}</h2>
         <div className="heading-actions">{q && <a href={feedUrl('posts',data.tab,'')}>{t("Clear search")}</a>}
         {data.tab==='following' && <a href={feedUrl('posts','all',q)}>{t("View all posts")}</a>}<a href={feedUrl('accounts',data.tab,'')}>{t("Find accounts")}</a></div></section>}>
       {(posts,update,remove)=>posts.map(post=><PostCard key={post.id} post={post} author={post.author} signedIn={Boolean(user)}
-        returnTo={feedUrl('posts',data.tab,q)} canPublish={post.author.canPublish} onUpdate={update} onRemove={()=>remove(post.id)}>
-        {user && <FollowButton account={post.author} onChange={next=>{
+        returnTo={feedUrl('posts',saved?'saved':data.tab,q)} canPublish={post.author.canPublish} onUpdate={update}
+        onRemove={()=>remove(post.id)} onUnsave={saved ? ()=>remove(post.id) : undefined}>
+        {user && !saved && <FollowButton account={post.author} onChange={next=>{
           for (const item of posts.filter(item=>item.author.kind===post.author.kind && item.author.id===post.author.id)) {
             if (data.tab==='following' && !next.following) remove(item.id);
             else update(item.id,{author:{...item.author, following:next.following}});

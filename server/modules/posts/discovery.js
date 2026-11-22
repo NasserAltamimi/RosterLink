@@ -5,8 +5,8 @@ import { requireUser, sessionUser } from '../auth/routes.js';
 import { PlayerProfile } from '../profiles/model.js';
 import { Organization, Team } from '../recruitment/models.js';
 import { canManageTeam, has } from '../recruitment/routes.js';
-import { Follow, Post } from './models.js';
-import { authorModels, authorScope, identity, page, postRows } from './routes.js';
+import { Follow, Post, PostBookmark } from './models.js';
+import { authorModels, authorScope, identity, page, pageFilter, pageResult, postRows } from './routes.js';
 
 const kinds = Object.keys(authorModels);
 const limit = 12;
@@ -46,6 +46,16 @@ async function identities(refs, user) {
   return result;
 }
 
+async function timelinePosts(rows, user) {
+  const refs = rows.map(post => ({ kind: post.authorKind, target: post.authorId }));
+  const [posts, authors] = await Promise.all([postRows(rows, user), identities(refs, user)]);
+  return posts.flatMap((post, index) => {
+    const { kind, target } = refs[index];
+    const author = authors.get(keyOf(kind, target));
+    return author ? [{ ...post, author }] : [];
+  });
+}
+
 export function discoveryRoutes() {
   const router = Router();
   router.get('/feed', async (req, res) => {
@@ -63,8 +73,21 @@ export function discoveryRoutes() {
       conditions.push({ $or: [{ body: literal(q) }, ...authors] });
     }
     const { rows, nextCursor } = await page(Post, { $and: conditions }, { before }, limit);
-    const [posts, authors] = await Promise.all([postRows(rows, user), identities(rows.map(p => ({ kind: p.authorKind, target: p.authorId })), user)]);
-    res.json({ tab: scope, posts: posts.map((post,i) => ({ ...post, author: authors.get(keyOf(rows[i].authorKind,rows[i].authorId)) })), nextCursor });
+    res.json({ tab: scope, posts: await timelinePosts(rows, user), nextCursor });
+  });
+
+  router.get('/saved-posts', requireUser, async (req, res) => {
+    const bookmarks = await PostBookmark.aggregate([
+      { $match: pageFilter({ user: req.user._id }, req.query) },
+      { $sort: { createdAt: -1, _id: -1 } },
+      { $lookup: { from: Post.collection.name, localField: 'post', foreignField: '_id', as: 'post' } },
+      { $unwind: '$post' },
+      { $match: { 'post.deletedAt': null } },
+      { $limit: limit + 1 },
+    ]);
+    const { rows, nextCursor } = pageResult(bookmarks, limit);
+    const posts = await timelinePosts(rows.map(row => Post.hydrate(row.post)), req.user);
+    res.json({ posts: posts.filter(post => post.saved), nextCursor });
   });
 
   router.get('/accounts', async (req,res) => {

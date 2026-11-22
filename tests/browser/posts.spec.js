@@ -23,6 +23,28 @@ const profileValues = displayName => ({ displayName, region: 'Riyadh', languages
 const clubValues = name => ({ name, region: 'Saudi Arabia', description: 'Competitive esports and community practice.' });
 const postCard = (page, body) => page.getByRole('article', { name: /^Post by/ }).filter({ hasText: body });
 
+test('save a feed post, reopen the Saved tab, and remove it', async ({ page, isMobile }) => {
+  if (isMobile) await page.addInitScript(() => localStorage.setItem('rosterlink-language', 'ar'));
+  const account = await register(page.context(), 'bookmark');
+  const { profile } = await create(page.context(), account.csrfToken, '/profiles', profileValues('Bookmark Scout'));
+  const body = 'Bookmark this replay ' + crypto.randomUUID();
+  await create(page.context(), account.csrfToken, '/posts/by/player/' + profile.id, { body });
+  await page.goto('/feed?tab=all&q=' + encodeURIComponent(body));
+  const post = page.getByRole('article', { name: isMobile ? /^منشور من/ : /^Post by/ }).filter({ hasText: body });
+  const save = post.getByRole('button', { name: isMobile ? 'حفظ المنشور' : 'Save post' });
+  await expect(save).toHaveAttribute('aria-pressed', 'false');
+  await save.click();
+  await expect(save).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('link', { name: isMobile ? 'المحفوظات' : 'Saved', exact: true }).click();
+  await expect(page).toHaveURL(/tab=saved/);
+  await expect(post).toBeVisible();
+  await page.reload();
+  await expect(save).toHaveAttribute('aria-pressed', 'true');
+  await save.click();
+  await expect(post).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: isMobile ? 'ما عندك منشورات محفوظة حتى الآن' : 'No saved posts yet' })).toBeVisible();
+});
+
 test('publish and interact across player, organization, and scoped team posts', async ({ page, browser, baseURL }, info) => {
   test.setTimeout(90000);
   const contextOptions = { baseURL, viewport: page.viewportSize(), isMobile: info.project.use.isMobile, hasTouch: info.project.use.hasTouch };
