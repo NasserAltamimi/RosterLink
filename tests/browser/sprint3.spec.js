@@ -51,6 +51,10 @@ test('Sprint 3 recruitment and dual-role journey', async ({ page, browser, baseU
     const playerToken = await register(page.context(), 'applicant');
     const managerToken = await register(managerContext, 'recruiter');
     const profile = await createProfile(page);
+    // A player who has never applied is guided from My Applications to the openings list.
+    await page.goto('/applications');
+    await expect(page.locator('.empty-state').getByRole('link', { name: 'Browse openings' })).toHaveAttribute('href', '/openings');
+    await page.goto('/profile');
     const { games } = await (await page.request.get('/api/games')).json();
     const gameId = games.find(game => game.slug === 'rocket-league')._id;
     const playerOrg = (await post(page.context(), playerToken, '/organizations', organization('Riyadh Academy'))).organization;

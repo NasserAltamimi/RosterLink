@@ -131,7 +131,7 @@ export function ApplicationList({ openingId }) {
       </div>}
       {pending.length > 0 && <section className="pending-applications"><h2>{t("Tryouts to respond to")}</h2><div className="recruitment-list">{pending.map(application => <ApplicationRow key={application.id} application={application} />)}</div></section>}
       {rest.length > 0 && <section>{pending.length > 0 && <h2>{t("Other applications")}</h2>}<div className="recruitment-list">{rest.map(application => <ApplicationRow key={application.id} application={application} manager={Boolean(openingId)} />)}</div></section>}
-      {shown.length === 0 && <section className="card empty-state"><ClipboardList size={28} aria-hidden="true" /><h2>{status ? t("No applications with this status") : t("No applications yet")}</h2><p className="muted">{openingId ? t("Submissions for this opening will appear here.") : t("When you apply, track the team’s response here.")}</p>{status && <button className="button secondary" type="button" onClick={() => setStatus('')}>{t("Show all applications")}</button>}</section>}
+      {shown.length === 0 && <section className="card empty-state"><ClipboardList size={28} aria-hidden="true" /><h2>{status ? t("No applications with this status") : t("No applications yet")}</h2><p className="muted">{openingId ? t("Submissions for this opening will appear here.") : t("When you apply, track the team’s response here.")}</p>{status && <button className="button secondary" type="button" onClick={() => setStatus('')}>{t("Show all applications")}</button>}{!openingId && applications.length === 0 && <a className="button primary" href="/openings">{t("Browse openings")}</a>}</section>}
     </>;
     }}</Resource>
   </>;
