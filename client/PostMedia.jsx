@@ -9,18 +9,45 @@ import { postLength } from '../shared/posts.js';
 const accepted = 'image/png,image/jpeg,image/webp,video/mp4,video/webm';
 
 export function Gallery({ items = [], author }) {
-  const [large, setLarge] = useState(null);
+  const [photoKey, setPhotoKey] = useState(null);
   const dialog = useRef(null);
+  const photos = items.filter(item => item.kind !== 'video');
+  const photoIndex = photos.findIndex(photo => photo.key === photoKey);
+  const photo = photos[photoIndex];
+
+  function movePhoto(offset) {
+    const next = photos[photoIndex + offset];
+    if (photo && next) setPhotoKey(next.key);
+  }
+
+  function handleViewerKey(event) {
+    if (photos.length < 2 || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    const rtl = getComputedStyle(event.currentTarget).direction === 'rtl';
+    movePhoto((event.key === 'ArrowRight') !== rtl ? 1 : -1);
+  }
+
+  useEffect(() => {
+    if (!photo && dialog.current?.open) dialog.current.close();
+  }, [photo]);
+
   if (!items.length) return null;
   return <div className={'post-gallery media-count-' + items.length}>
     {items.map((item,i) => item.kind === 'video'
       ? <video key={item.key} src={item.url} poster={item.posterUrl} controls muted playsInline preload="none" aria-label={t('Gameplay clip by {name}', { name: isolate(author) })}/>
       : <button key={item.key} type="button" aria-label={t('Enlarge photo {number} by {name}', { number: number(i + 1), name: isolate(author) })}
-          onClick={() => { setLarge(item.url); dialog.current.showModal(); }}>
+          onClick={() => { setPhotoKey(item.key); dialog.current.showModal(); }}>
           <img loading="lazy" src={item.url} alt={t('Photo {number} shared by {name}', { number: number(i + 1), name: isolate(author) })}/><Maximize2 size={16}/>
         </button>)}
-    <dialog className="photo-viewer" ref={dialog} onClose={() => setLarge(null)} onClick={e => { if(e.target === dialog.current) dialog.current.close(); }}>
-      {large && <><button className="button secondary" autoFocus onClick={() => dialog.current.close()} aria-label={t("Close photo")}><X/></button><img src={large} alt={t('Full size photo shared by {name}', { name: isolate(author) })}/></>}
+    <dialog className="photo-viewer" aria-label={t('Photo viewer')} ref={dialog} onClose={() => setPhotoKey(null)}
+      onKeyDown={handleViewerKey} onClick={e => { if(e.target === dialog.current) dialog.current.close(); }}>
+      <button className="button secondary photo-viewer-close" type="button" autoFocus onClick={() => dialog.current.close()} aria-label={t('Close photo')}><X aria-hidden="true"/></button>
+      {photo && <img src={photo.url} alt={t('Full size photo shared by {name}', { name: isolate(author) })}/>}
+      {photo && photos.length > 1 && <div className="photo-viewer-nav">
+        <button className="button secondary" type="button" aria-disabled={photoIndex === 0} onClick={() => movePhoto(-1)}>{t('Previous photo')}</button>
+        <span role="status">{t('{current} of {total}', { current: number(photoIndex + 1), total: number(photos.length) })}</span>
+        <button className="button secondary" type="button" aria-disabled={photoIndex === photos.length - 1} onClick={() => movePhoto(1)}>{t('Next photo')}</button>
+      </div>}
     </dialog>
   </div>;
 }
