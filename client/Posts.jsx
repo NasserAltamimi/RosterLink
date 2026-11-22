@@ -1,6 +1,6 @@
 import { isolate, number, t } from './i18n.js';
 import { useCallback, useEffect, useId, useState } from 'react';
-import { Heart, MessageCircle, Pencil, Send, Trash2 } from 'lucide-react';
+import { Bookmark, Heart, MessageCircle, Pencil, Send, Trash2 } from 'lucide-react';
 import { commentLength } from '../shared/posts.js';
 import { PostComposer, Gallery } from './PostMedia.jsx';
 import { api } from './api.js';
@@ -112,7 +112,7 @@ function CommentThread({ id, postId, signedIn, returnTo, onCount }) {
   </div>;
 }
 
-export function PostCard({ post, author, signedIn, canPublish, onUpdate, onRemove, children, returnTo = author.url }) {
+export function PostCard({ post, author, signedIn, canPublish, onUpdate, onRemove, onUnsave, children, returnTo = author.url }) {
   const [expanded, setExpanded] = useState(false);
   const [mode, setMode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -134,6 +134,10 @@ export function PostCard({ post, author, signedIn, canPublish, onUpdate, onRemov
         await api(path, { method: 'DELETE' });
         onRemove();
         notify('Post deleted.');
+      } else if (action === 'bookmark') {
+        const result = await api(path + '/bookmark', { method: post.saved ? 'DELETE' : 'PUT' });
+        onUpdate(post.id, result);
+        if (!result.saved) onUnsave?.();
       } else {
         onUpdate(post.id, await api(path + '/reaction', { method: post.reacted ? 'DELETE' : 'PUT' }));
       }
@@ -167,6 +171,10 @@ export function PostCard({ post, author, signedIn, canPublish, onUpdate, onRemov
       <button type="button" className="button secondary compact" aria-expanded={expanded} aria-controls={expanded ? threadId : undefined} onClick={() => setExpanded(!expanded)}>
         <MessageCircle size={16} aria-hidden="true" /><bdi>{quantity(post.commentCount, 'comment')}</bdi>
       </button>
+      {signedIn && <button type="button" className="button secondary compact" aria-pressed={Boolean(post.saved)}
+        aria-label={t('Save post')} disabled={busy} onClick={() => act('bookmark')}>
+        <Bookmark size={16} aria-hidden="true" fill={post.saved ? 'currentColor' : 'none'} />{t(post.saved ? 'Saved' : 'Save')}
+      </button>}
     </div>
     {expanded && <CommentThread id={threadId} postId={post.id} signedIn={signedIn} returnTo={returnTo} onCount={updateCommentCount} />}
   </article>;

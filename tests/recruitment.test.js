@@ -471,6 +471,39 @@ test('Feed scopes, full-set search, stable cursors and personal follow relations
   assert.equal((await get(target)).body.followers,0);
 });
 
+test('saved posts are private, deduplicated, ordered by saved time, and omit deleted posts', async () => {
+  const saver = await register('bookmark-reader@example.test');
+  const list = '/api/discovery/saved-posts';
+  await visitor.agent.get(list).expect(401);
+  const club = await Organization.create({ ...orgValues, name: 'Bookmark Club', managers: [owner.id] });
+  const rows = await Post.insertMany(Array.from({ length: 14 }, (_, index) => ({
+    authorKind: 'organization', authorId: club._id, body: 'Bookmark test ' + index,
+    createdAt: new Date(Date.UTC(2024, 0, 14 - index)),
+  })));
+  const bookmark = post => '/posts/' + post.id + '/bookmark';
+  await write(visitor, 'put', bookmark(rows[0]), {}).expect(401);
+  await Promise.all([1, 2].map(() => write(saver, 'put', bookmark(rows[0]), {}).expect(200, { saved: true })));
+  for (const post of rows.slice(1)) await write(saver, 'put', bookmark(post), {}).expect(200, { saved: true });
+  await write(owner, 'delete', '/posts/' + rows.at(-1).id, {}).expect(204);
+  assert.deepEqual((await owner.agent.get(list).expect(200)).body.posts, []);
+  await saver.agent.get(list).query({ before: 'invalid' }).expect(400);
+  const fresh = await newVisitor();
+  const login = await write(fresh, 'post', '/auth/login', { email: saver.email, password }).expect(200);
+  fresh.token = login.body.csrfToken;
+  const first = (await fresh.agent.get(list).expect(200)).body;
+  assert.deepEqual(first.posts.map(post => post.id), rows.slice(1, -1).reverse().map(post => post.id));
+  assert.ok(first.posts.every(post => post.saved && post.author.name === club.name));
+  const last = (await fresh.agent.get(list).query({ before: first.nextCursor }).expect(200)).body;
+  assert.deepEqual(last.posts.map(post => post.id), [rows[0].id]);
+  assert.equal(last.nextCursor, null);
+  const feed = '/api/discovery/feed?q=Bookmark%20test%200';
+  assert.equal((await fresh.agent.get(feed).expect(200)).body.posts[0].saved, true);
+  assert.equal((await owner.agent.get(feed).expect(200)).body.posts[0].saved, false);
+  assert.equal((await visitor.agent.get(feed).expect(200)).body.posts[0].saved, undefined);
+  await write(fresh, 'delete', bookmark(rows[0]), {}).expect(200, { saved: false });
+  assert.equal((await fresh.agent.get(feed).expect(200)).body.posts[0].saved, false);
+});
+
 test('SF-14–21 data and permissions survive MongoDB restart and a fresh login', async () => {
   const preserved = await createOpening(outsider, teamB);
   await app.locals.sessionStore.close(); await mongoose.disconnect();

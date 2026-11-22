@@ -10,7 +10,7 @@ import { PlayerProfile } from '../profiles/model.js';
 import { publicAvatar } from '../profiles/public.js';
 import { Organization, Team, organizationLogo } from '../recruitment/models.js';
 import { canManageTeam, get, has } from '../recruitment/routes.js';
-import { Post, PostComment, PostReaction } from './models.js';
+import { Post, PostBookmark, PostComment, PostReaction } from './models.js';
 
 export const authorModels = { player: PlayerProfile, organization: Organization, team: Team };
 const textInput = limit => z.strictObject({ body: z.string().trim().min(1, 'Enter some text.').max(limit) });
@@ -42,21 +42,26 @@ function requirePublisher(scope) {
   if (!scope.canPublish) throw new HttpError(403, 'You cannot publish or manage posts for this identity.');
 }
 
-export async function page(Model, scope, query, limit) {
+export function pageFilter(scope, query) {
   const { before } = parse(cursorInput, query);
-  let filter = scope;
-  if (before) {
-    const [time, id, extra] = before.split('/');
-    if (extra !== undefined || !z.iso.datetime().safeParse(time).success || !objectId.safeParse(id).success) {
-      throw new HttpError(400, 'Invalid page cursor.');
-    }
-    const createdAt = new Date(time);
-    filter = { $and: [scope, { $or: [{ createdAt: { $lt: createdAt } }, { createdAt, _id: { $lt: new Types.ObjectId(id) } }] }] };
+  if (!before) return scope;
+  const [time, id, extra] = before.split('/');
+  if (extra !== undefined || !z.iso.datetime().safeParse(time).success || !objectId.safeParse(id).success) {
+    throw new HttpError(400, 'Invalid page cursor.');
   }
-  const docs = await Model.find(filter).sort({ createdAt: -1, _id: -1 }).limit(limit + 1);
+  const createdAt = new Date(time);
+  return { $and: [scope, { $or: [{ createdAt: { $lt: createdAt } }, { createdAt, _id: { $lt: new Types.ObjectId(id) } }] }] };
+}
+
+export function pageResult(docs, limit) {
   const rows = docs.slice(0, limit);
   const last = rows.at(-1);
-  return { rows, nextCursor: docs.length > limit ? `${last.createdAt.toISOString()}/${last.id}` : null };
+  return { rows, nextCursor: docs.length > limit ? `${last.createdAt.toISOString()}/${last._id}` : null };
+}
+
+export async function page(Model, scope, query, limit) {
+  const docs = await Model.find(pageFilter(scope, query)).sort({ createdAt: -1, _id: -1 }).limit(limit + 1);
+  return pageResult(docs, limit);
 }
 
 async function counts(Model, ids) {
@@ -73,17 +78,20 @@ function postDto(post) {
 export async function postRows(rows, user) {
   if (rows.length === 0) return [];
   const ids = rows.map(row => row._id);
-  const [reactions, comments, mine] = await Promise.all([
+  const [reactions, comments, mine, bookmarks] = await Promise.all([
     counts(PostReaction, ids),
     counts(PostComment, ids),
     user ? PostReaction.find({ post: { $in: ids }, user: user._id }).distinct('post') : [],
+    user ? PostBookmark.find({ post: { $in: ids }, user: user._id }).distinct('post') : [],
   ]);
   const reacted = new Set(mine.map(String));
+  const saved = new Set(bookmarks.map(String));
   return rows.map(row => ({
     ...postDto(row),
     reactionCount: reactions.get(row.id) || 0,
     commentCount: comments.get(row.id) || 0,
     reacted: reacted.has(row.id),
+    ...(user && { saved: saved.has(row.id) }),
   }));
 }
 
@@ -137,7 +145,7 @@ export function postRoutes(directory) {
     requirePublisher(scope);
     const post = await storage.receive(req,res,[],(body,attachments) =>
       Post.create({ ...validate(body,attachments), attachments, authorKind: kind, authorId: scope.subject._id }));
-    res.status(201).json({ post: { ...postDto(post), reactionCount: 0, commentCount: 0, reacted: false } });
+    res.status(201).json({ post: { ...postDto(post), reactionCount: 0, commentCount: 0, reacted: false, saved: false } });
   });
   router.patch('/:postId', requireUser, async (req, res) => {
     requirePublisher(await authorScope(req.post.authorKind, req.post.authorId, req.user));
@@ -171,6 +179,20 @@ export function postRoutes(directory) {
   }
   router.put('/:postId/reaction', requireUser, reaction);
   router.delete('/:postId/reaction', requireUser, reaction);
+
+  async function bookmark(req, res) {
+    const key = { post: req.post._id, user: req.user._id };
+    if (req.method === 'PUT') {
+      try {
+        await PostBookmark.updateOne(key, { $setOnInsert: key }, { upsert: true });
+      } catch (error) {
+        if (error.code !== 11000) throw error;
+      }
+    } else await PostBookmark.deleteOne(key);
+    res.json({ saved: Boolean(await PostBookmark.exists(key)) });
+  }
+  router.put('/:postId/bookmark', requireUser, bookmark);
+  router.delete('/:postId/bookmark', requireUser, bookmark);
 
   router.get('/:postId/comments', async (req, res) => {
     const post = req.post._id;
